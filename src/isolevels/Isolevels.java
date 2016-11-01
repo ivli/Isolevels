@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -31,7 +32,7 @@ public class Isolevels extends javax.swing.JFrame {
     BufferedImage image = null;
     Isolevel iso = null;
     Shape shape = null;
-    Rectangle rect = null;
+    Rectangle2D rect = null;
    
     public Isolevels(final String aF) {
         initComponents();
@@ -44,12 +45,9 @@ public class Isolevels extends javax.swing.JFrame {
             jPanel.add(new JComponent() {
                 Point p1;
                 Point p2;
-                {
-                addMouseListener(new MouseListener() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {                    
-                    }
 
+                {
+                addMouseListener(new MouseAdapter() {                   
                     @Override
                     public void mousePressed(MouseEvent e) {
                         p1 = e.getPoint();
@@ -59,12 +57,8 @@ public class Isolevels extends javax.swing.JFrame {
                     public void mouseReleased(MouseEvent e) {
                         p2 = e.getPoint();
                         
-                        Rectangle2D r = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
-                        rect = r.getBounds();
-                        Graphics2D g = (Graphics2D)getGraphics();                        
-                        g.setPaint(Color.white);
-                        g.draw(r);
-
+                        rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
+                       
                         AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth() / (double)getWidth(), (double)image.getHeight() / (double)getHeight()); 
                                                                             
                         Rectangle r2 = new Rectangle();
@@ -75,20 +69,17 @@ public class Isolevels extends javax.swing.JFrame {
                         image = new BufferedImage(image.getColorModel(), wr, false, null);                                                 
                         */
                         iso = Isolevel.create(wr, null, null);
-                        
-                        
-                        
+                
                         jLevel.addChangeListener(new ChangeListener() {
                             @Override
                             public void stateChanged(ChangeEvent e) {
                                 JSlider source = (JSlider)e.getSource();
                                 if (!source. getValueIsAdjusting()) {
                                     iso.update(source.getValue());
-                                    
 
                                     try {    
                                         AffineTransform to = at.createInverse();
-                                        AffineTransform to2 = AffineTransform.getTranslateInstance(r.getX(), r.getY());                                        
+                                        AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
                                         shape = to.createTransformedShape(iso);
                                         shape = to2.createTransformedShape(shape);                                        
                                         repaint();
@@ -96,44 +87,20 @@ public class Isolevels extends javax.swing.JFrame {
 
                                     }                    
                                 }
-                            }
-                        
-                        
+                            }                                                
                         });
                                                 
                         jLevel.setMinimum((int)iso.min);
                         jLevel.setMaximum((int)iso.max);
                         jLevel.setValue((int)((iso.max - iso.min) / 2.));                       
-                    }
+                    }});
 
-                    @Override
-                    public void mouseEntered(MouseEvent e) {}
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {}                
-                });
-                
-                addMouseMotionListener(new MouseMotionListener(){
-                    @Override
-                    public void mouseDragged(MouseEvent e) {                        
-                    AffineTransformOp op = new AffineTransformOp(
-                                                 AffineTransform.getScaleInstance((double)getWidth()/(double)image.getWidth(), (double)getHeight()/(double)image.getHeight()), 
-                                                    AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-                        BufferedImage buf = op.filter(image, null);
+                addMouseMotionListener(new MouseAdapter() {
+                    public void mouseDragged(MouseEvent e) {                                             
                         p2 = e.getPoint();
-                        Rectangle2D  r = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
-                        Graphics2D g = (Graphics2D)getGraphics();
-                        
-                        g.setPaint(Color.white);
-                       
-                        g.drawImage(buf, 0, 0, buf.getWidth(), buf.getHeight(), null);
-                        g.draw(r);    
-                    }
-
-                    @Override
-                    public void mouseMoved(MouseEvent e) {                      
-                    }
-                
+                        rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));                 
+                        repaint();
+                    }                   
                 });
                 }
                 @Override
@@ -145,6 +112,7 @@ public class Isolevels extends javax.swing.JFrame {
                     g.drawImage(buf, 0, 0, buf.getWidth(), buf.getHeight(), null);
                     
                     ((Graphics2D)g).setPaint(Color.white);
+                    
                     if (null != rect)
                         ((Graphics2D)g).draw(rect);
                     
@@ -160,12 +128,7 @@ public class Isolevels extends javax.swing.JFrame {
         } catch (IOException ex) {            
             System.out.println("unable to open: " + srcName + ", cause:" + ex.getLocalizedMessage());             
             System.exit(-1);
-        }
-        
-      
-                
-        
-               
+        }  
     }
     
     /** This method is called from within the constructor to
