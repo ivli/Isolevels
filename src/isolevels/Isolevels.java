@@ -12,6 +12,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -31,7 +33,7 @@ public class Isolevels extends javax.swing.JFrame {
     Shape shape = null;
     Rectangle2D rect = null;
     
-    double XM = .0, YM = .0;
+    Point2D cross;// = new Path2D.Double();
    
     public Isolevels(final String aF) {
         initComponents();
@@ -40,12 +42,9 @@ public class Isolevels extends javax.swing.JFrame {
         Moments mom;
         try {
             image = ImageIO.read(srcFile);
-            mom = new Moments(image);
-            
+            mom = new Moments(image);            
             mom.calc();
-            System.out.printf("--> %f, %f", mom.xCenterOfMass, mom.yCenterOfMass);
-            
-            
+                                 
             jPanel.add(new JComponent() {
                 Point p1;
                 Point p2;
@@ -73,23 +72,28 @@ public class Isolevels extends javax.swing.JFrame {
                         image = new BufferedImage(image.getColorModel(), wr, false, null);                                                 
                         */
                         iso = Isolevel.create(wr, null, null);
-                
+                        mom.calc(r2.x, r2.y, r2.width, r2.height);
+                        AffineTransform to;
+                        
+                        try { 
+                            to = at.createInverse();
+                            cross = new Point2D.Double(mom.xCenterOfMass * to.getScaleX(), mom.yCenterOfMass * to.getScaleY());                        
+
+                            System.out.printf("--> %f, %f\n", cross.getX(), cross.getY());
+                        
+                        
                         jLevel.addChangeListener(new ChangeListener() {
                             @Override
                             public void stateChanged(ChangeEvent e) {
                                 JSlider source = (JSlider)e.getSource();
                                 if (!source. getValueIsAdjusting()) {
                                     iso.update(source.getValue());
-                                    
-                                    try {    
-                                        AffineTransform to = at.createInverse();
-                                        AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
-                                        shape = to.createTransformedShape(iso);
-                                        shape = to2.createTransformedShape(shape);                                        
+                                    AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
+                                    shape = to.createTransformedShape(iso);
+                                    shape = to2.createTransformedShape(shape);   
+                                        
                                         repaint();
-                                    } catch (NoninvertibleTransformException ex) {
-
-                                    }                    
+                                                    
                                 }
                             }                                                
                         });
@@ -97,6 +101,11 @@ public class Isolevels extends javax.swing.JFrame {
                         jLevel.setMinimum((int)iso.min);
                         jLevel.setMaximum((int)iso.max);
                         jLevel.setValue((int)((iso.max - iso.min) / 2.));                       
+                   
+                        } catch (NoninvertibleTransformException ex) {  
+
+                        
+                        }
                     }});
 
                 addMouseMotionListener(new MouseAdapter() {
@@ -115,15 +124,26 @@ public class Isolevels extends javax.swing.JFrame {
                     BufferedImage buf = op.filter(image, null);
                     g.drawImage(buf, 0, 0, buf.getWidth(), buf.getHeight(), null);
                     
-                    ((Graphics2D)g).setPaint(Color.white);
+                    Graphics2D g2d = (Graphics2D)g;
+                    g2d.setPaint(Color.white);
                     
                     if (null != rect)
-                        ((Graphics2D)g).draw(rect);
+                        g2d.draw(rect);
                     
                     ((Graphics2D)g).setPaint(Color.red);
                     
                     if (null != shape)
-                        ((Graphics2D)g).draw(shape);
+                        g2d.draw(shape);
+                    
+                    if (null != cross) {
+                        Path2D p = new Path2D.Double();
+                        p.moveTo(cross.getX() - 5, cross.getY());
+                        p.lineTo(cross.getX() + 5, cross.getY());
+                        p.moveTo(cross.getX(), cross.getY() - 5);
+                        p.lineTo(cross.getX(), cross.getY() + 5);
+                        g2d.setPaint(Color.BLUE);
+                        g2d.draw(p);   
+                    }
                     
                 }  
                 
@@ -150,6 +170,7 @@ public class Isolevels extends javax.swing.JFrame {
         setTitle("Antenna");
 
         jPanel.setMinimumSize(new java.awt.Dimension(200, 200));
+        jPanel.setPreferredSize(new java.awt.Dimension(400, 400));
         jPanel.setLayout(new java.awt.BorderLayout());
 
         jLevel.setOrientation(javax.swing.JSlider.VERTICAL);
@@ -160,19 +181,18 @@ public class Isolevels extends javax.swing.JFrame {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 574, Short.MAX_VALUE)
+                .add(jPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(18, 18, 18)
-                .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 49, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(21, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(jLevel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 303, Short.MAX_VALUE))
-                .addContainerGap())
+                .add(jPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(42, Short.MAX_VALUE))
+            .add(jLevel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 453, Short.MAX_VALUE)
         );
 
         pack();

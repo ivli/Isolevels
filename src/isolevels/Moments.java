@@ -14,51 +14,50 @@ import java.awt.image.Raster;
  * @author likhachev
  */
 public class Moments {
-    int width;
-    int height;
+    
  
     double mean;    
     double xCenterOfMass;
     double yCenterOfMass;
     double skewness;
     double kurtosis;
-    
-    //int ry, rh;
-    //int rx, rw;
-    int pixelCount;
-     
+   
     int minThreshold; 
     int maxThreshold;
     
-    //Raster iR;
+    int width;
+    int height;
     int pixels[];
     
     Moments(BufferedImage aR) {        
         width = aR.getWidth();
         height = aR.getHeight();
         pixels  = new int[width*height];
-        PixelGrabber pg = new PixelGrabber(aR, 0, 0, width, height, pixels, 0, 0);
-        pg.startGrabbing();
+        PixelGrabber pg = new PixelGrabber(aR, 0, 0, width, height, pixels, 0, width);
+        try {
+            pg.grabPixels();
+        } catch (InterruptedException ex) {
+            System.exit(-1);
+        }
     }
     
     void calc(int rx, int ry, int rw, int rh) {
-        if (rx < 0 || ry < 0 || (rx + rw) > width || (ry + rh) > height || rx > rw || ry > rh)
+        if (rx < 0 || ry < 0 || (rx + rw) > width || (ry + rh) > height)
             throw new IllegalArgumentException("Wrong ROI");
         
-        calculateMoments( rx,  ry, rw, rh);
+        calculateMoments(rx, ry, rw, rh);
     }
     
-     void calc() {        
+    void calc() {        
         calculateMoments(0,  0,  width, height);
     }
-    
-    
-    private void calculateMoments(int rx, int ry, int rw, int rh) {           
-            int i, iv;
-            double v, v2, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
-         
-            for (int y=ry; y<(ry+rh); y++) {
-                i = y*width + rx;                    
+        
+    private void calculateMoments(int rx, int ry, int rw, int rh) {                  
+        double iv;
+        double v, v2, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
+
+        for (int y=ry; y<(ry+rh); y++) {
+                int i = y*width + rx;                    
                 for (int x=rx; x<(rx+rw); x++) {				
                     iv = pixels[i] & 0xffff;
                     v = iv;
@@ -71,16 +70,17 @@ public class Moments {
                     ysum += y*v;
                     i++;
                 }
-            }
-            
-	    double mean2 = mean*mean;
-	    double variance = sum2/pixelCount - mean2;
-	    double sDeviation = Math.sqrt(variance);
-	    skewness = ((sum3 - 3.0*mean*sum2)/pixelCount + 2.0*mean*mean2)/(variance*sDeviation);
-	    kurtosis = (((sum4 - 4.0*mean*sum3 + 6.0*mean2*sum2)/pixelCount - 3.0*mean2*mean2)/(variance*variance)-3.0);
-		
-            xCenterOfMass = xsum/sum1+0.5;
-            yCenterOfMass = ysum/sum1+0.5;		
-	}
-    
+        }
+        
+        double pixelCount = rw*rh;
+        double mean2 = mean*mean;
+        double variance = sum2/pixelCount - mean2;
+        double sDeviation = Math.sqrt(variance);
+        skewness = ((sum3 - 3.0*mean*sum2)/pixelCount + 2.0*mean*mean2)/(variance*sDeviation);
+        kurtosis = (((sum4 - 4.0*mean*sum3 + 6.0*mean2*sum2)/pixelCount - 3.0*mean2*mean2)/(variance*variance)-3.0);
+
+        xCenterOfMass = xsum/sum1+0.5;
+        yCenterOfMass = ysum/sum1+0.5;	
+        System.out.printf("--> (%d,%d,%d,%d) = %f, %f", rx, ry, rw, rh, xCenterOfMass, yCenterOfMass);
+    }
 }
