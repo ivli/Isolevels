@@ -44,7 +44,8 @@ public class Isolevels extends javax.swing.JFrame {
             image = ImageIO.read(srcFile);
             mom = new Moments(image);            
             mom.calc();
-                                 
+            cross = new Point2D.Double(mom.XM, mom.YM);
+            
             jPanel.add(new JComponent() {
                 Point p1;
                 Point p2;
@@ -58,8 +59,7 @@ public class Isolevels extends javax.swing.JFrame {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        p2 = e.getPoint();
-                        
+                        p2 = e.getPoint();                        
                         rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
                        
                         AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth() / (double)getWidth(), (double)image.getHeight() / (double)getHeight()); 
@@ -77,7 +77,7 @@ public class Isolevels extends javax.swing.JFrame {
                         
                         try { 
                             to = at.createInverse();
-                            cross = new Point2D.Double(mom.xCenterOfMass * to.getScaleX(), mom.yCenterOfMass * to.getScaleY());                        
+                            cross.setLocation(mom.XM, mom.YM);                        
 
                             System.out.printf("--> %f, %f\n", cross.getX(), cross.getY());
                         
@@ -103,8 +103,7 @@ public class Isolevels extends javax.swing.JFrame {
                         jLevel.setValue((int)((iso.max - iso.min) / 2.));                       
                    
                         } catch (NoninvertibleTransformException ex) {  
-
-                        
+                            
                         }
                     }});
 
@@ -137,10 +136,12 @@ public class Isolevels extends javax.swing.JFrame {
                     
                     if (null != cross) {
                         Path2D p = new Path2D.Double();
-                        p.moveTo(cross.getX() - 5, cross.getY());
-                        p.lineTo(cross.getX() + 5, cross.getY());
-                        p.moveTo(cross.getX(), cross.getY() - 5);
-                        p.lineTo(cross.getX(), cross.getY() + 5);
+                        final double x = cross.getX() * (double)getWidth()/(double)image.getWidth();
+                        final double y = cross.getY() * (double)getHeight()/(double)image.getHeight();
+                        p.moveTo(x - 5, y);
+                        p.lineTo(x + 5, y);
+                        p.moveTo(x, y - 5);
+                        p.lineTo(x, y + 5);
                         g2d.setPaint(Color.BLUE);
                         g2d.draw(p);   
                     }
