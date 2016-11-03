@@ -19,7 +19,7 @@ public class Isolevel extends Path2D.Double {
     
     private java.lang.Double iLevel;
     private Conrec iCon;
-    
+            
     private Isolevel(Raster aSrc, Rectangle aRect) {
         iSrc = aSrc;
         iRect = aRect;
@@ -28,7 +28,7 @@ public class Isolevel extends Path2D.Double {
     
     public static Isolevel create(Raster aSrc, Rectangle aRect, java.lang.Double aLevel) {
         Isolevel ret = new Isolevel(aSrc, aRect);
-        ret.prepare();
+        ret.init();
         
         if (null != aLevel)
             ret.update(aLevel);
@@ -43,7 +43,7 @@ public class Isolevel extends Path2D.Double {
     double min = java.lang.Double.MAX_VALUE;
     double max = java.lang.Double.MIN_VALUE;
     
-    private void prepare() {
+    private void init() {
         da = new double[iSrc.getWidth()][iSrc.getHeight()];
         x = new double[iSrc.getWidth()];
         y = new double[iSrc.getHeight()];

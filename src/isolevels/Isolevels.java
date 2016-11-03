@@ -10,11 +10,8 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -33,15 +30,22 @@ public class Isolevels extends javax.swing.JFrame {
     Isolevel iso = null;
     Shape shape = null;
     Rectangle2D rect = null;
+    
+    double XM = .0, YM = .0;
    
     public Isolevels(final String aF) {
         initComponents();
         String srcName = aF;
         File srcFile = new File(srcName);
-       
+        Moments mom;
         try {
             image = ImageIO.read(srcFile);
-                        
+            mom = new Moments(image);
+            
+            mom.calc();
+            System.out.printf("--> %f, %f", mom.xCenterOfMass, mom.yCenterOfMass);
+            
+            
             jPanel.add(new JComponent() {
                 Point p1;
                 Point p2;
@@ -76,7 +80,7 @@ public class Isolevels extends javax.swing.JFrame {
                                 JSlider source = (JSlider)e.getSource();
                                 if (!source. getValueIsAdjusting()) {
                                     iso.update(source.getValue());
-
+                                    
                                     try {    
                                         AffineTransform to = at.createInverse();
                                         AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
