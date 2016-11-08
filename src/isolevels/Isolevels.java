@@ -1,4 +1,3 @@
-
 package isolevels;
 
 import java.awt.Color;
@@ -17,6 +16,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +29,10 @@ import javax.swing.event.ChangeListener;
 
 
 public class Isolevels extends javax.swing.JFrame {
+    String srcName;    
     BufferedImage image = null;
     Isolevel iso = null;
+    Zcross zc = null;
     Shape shape = null;
     Rectangle2D rect = null;
     
@@ -37,14 +40,13 @@ public class Isolevels extends javax.swing.JFrame {
    
     public Isolevels(final String aF) {
         initComponents();
-        String srcName = aF;
-        File srcFile = new File(srcName);
+        srcName = aF;
+        //File srcFile = new File(srcName);
         Moments mom;
         try {
-            image = ImageIO.read(srcFile);
-            mom = new Moments(image);            
-            mom.calc();
-            cross = new Point2D.Double(mom.XM, mom.YM);
+            image = ImageIO.read(new File(srcName));
+            mom = new Moments(image);                                    
+            cross = mom.getCoG(null);///new Point2D.Double(mom.XM, mom.YM);
             
             jPanel.add(new JComponent() {
                 Point p1;
@@ -72,7 +74,7 @@ public class Isolevels extends javax.swing.JFrame {
                         image = new BufferedImage(image.getColorModel(), wr, false, null);                                                 
                         */
                         iso = Isolevel.create(wr, null, null);
-                        mom.calc(r2.x, r2.y, r2.width, r2.height);
+                        cross = mom.getCoG(r2);
                         AffineTransform to;
                         
                         try { 
@@ -90,10 +92,8 @@ public class Isolevels extends javax.swing.JFrame {
                                     iso.update(source.getValue());
                                     AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
                                     shape = to.createTransformedShape(iso);
-                                    shape = to2.createTransformedShape(shape);   
-                                        
-                                        repaint();
-                                                    
+                                    shape = to2.createTransformedShape(shape);                                       
+                                    repaint();                                                    
                                 }
                             }                                                
                         });
@@ -156,6 +156,11 @@ public class Isolevels extends javax.swing.JFrame {
         }  
     }
     
+    
+    Kernel makeKernel(float[] aK){             
+        return new Kernel ((int)Math.sqrt(aK.length), (int)Math.sqrt(aK.length), aK);
+    };
+   
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -219,10 +224,81 @@ public class Isolevels extends javax.swing.JFrame {
 
     private void jConvolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jConvolveActionPerformed
         
-        Convolutor c = new Convolutor();
-        BufferedImage out = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-        c.convolve(image, out);
-        image = out;        
+        final float[] emboss = new float[] { -2,0,0,   0,1,0,   0,0,2 };
+        final float[] blurring = new float[] { 1f/9f,1f/9f,1f/9f, 1f/9f,1f/9f,1f/9f, 1f/9f,1f/9f,1f/9f };
+        final float[] sharpening = new float[] { -1,-1,-1,   -1,9,-1,   -1,-1,-1 };
+        
+        final float[] Gauss_5x5 = new float[] { 1,  4,  7,  4, 1,
+                                                4, 16, 26, 16, 4,
+                                                7, 26, 41, 26, 7,
+                                                4, 16, 26, 16, 4,
+                                                1,  4,  7,  4, 1
+        };
+        
+        final float[] Gauss_3x3_sigma1 = new float[] {0.077847f, 0.123317f, 0.077847f, 
+                                                      0.123317f, 0.195346f, 0.123317f, 
+                                                      0.077847f, 0.123317f, 0.077847f};
+        
+        final float[] Gauss_3x3_sigma3 = new float[] {0.107035f, 0.113092f, 0.107035f,
+                                                      0.113092f, 0.119491f, 0.113092f,
+                                                      0.107035f, 0.113092f, 0.107035f};
+        
+        final float[] Laplacian_3x3 = new float[] { 0, -1,  0,
+                                                   -1,  4, -1,
+                                                    0, -1,  0};    
+        
+        final float[] Laplacian_3x3_sigma_1point4 = new float[] { -0.0037480f,  -0.0073566f,  -0.0037480f,
+                                                                  -0.0073566f,  -0.0127458f,  -0.0073566f,
+                                                                  -0.0037480f,  -0.0073566f,  -0.0037480f};
+        
+        final float[] Laplacian_11x11_sigma_2 = new float[] { 
+            8.110750e-006f, 1.962940e-005f, 3.710001e-005f, 5.598273e-005f, 6.981805e-005f, 7.471898e-005f, 6.981805e-005f, 5.598273e-005f, 3.710001e-005f, 1.962940e-005f, 8.110750e-006f, 
+            1.962940e-005f, 4.397295e-005f, 7.471898e-005f, 9.853654e-005f, 1.075274e-004f, 1.083062e-004f, 1.075274e-004f, 9.853654e-005f, 7.471898e-005f, 4.397295e-005f, 1.962940e-005f, 
+            3.710001e-005f, 7.471898e-005f, 1.054362e-004f, 9.849036e-005f, 5.732105e-005f, 3.247663e-005f, 5.732105e-005f, 9.849036e-005f, 1.054362e-004f, 7.471898e-005f, 3.710001e-005f, 
+            5.598273e-005f, 9.853654e-005f, 9.849036e-005f, 0.000000e+000f, -1.606347e-004f, -2.426973e-004f, -1.606347e-004f, 0.000000e+000f, 9.849036e-005f, 9.853654e-005f, 5.598273e-005f, 
+            6.981805e-005f, 1.075274e-004f, 5.732105e-005f, -1.606347e-004f, -4.674443e-004f, -6.179644e-004f, -4.674443e-004f, -1.606347e-004f, 5.732105e-005f, 1.075274e-004f, 6.981805e-005f, 
+            7.471898e-005f, 1.083062e-004f, 3.247663e-005f, -2.426973e-004f, -6.179644e-004f, -8.002805e-004f, -6.179644e-004f, -2.426973e-004f, 3.247663e-005f, 1.083062e-004f, 7.471898e-005f, 
+            6.981805e-005f, 1.075274e-004f, 5.732105e-005f, -1.606347e-004f, -4.674443e-004f, -6.179644e-004f, -4.674443e-004f, -1.606347e-004f, 5.732105e-005f, 1.075274e-004f, 6.981805e-005f, 
+            5.598273e-005f, 9.853654e-005f, 9.849036e-005f, 0.000000e+000f, -1.606347e-004f, -2.426973e-004f, -1.606347e-004f, 0.000000e+000f, 9.849036e-005f, 9.853654e-005f, 5.598273e-005f, 
+            3.710001e-005f, 7.471898e-005f, 1.054362e-004f, 9.849036e-005f, 5.732105e-005f, 3.247663e-005f, 5.732105e-005f, 9.849036e-005f, 1.054362e-004f, 7.471898e-005f, 3.710001e-005f, 
+            1.962940e-005f, 4.397295e-005f, 7.471898e-005f, 9.853654e-005f, 1.075274e-004f, 1.083062e-004f, 1.075274e-004f, 9.853654e-005f, 7.471898e-005f, 4.397295e-005f, 1.962940e-005f, 
+            8.110750e-006f, 1.962940e-005f, 3.710001e-005f, 5.598273e-005f, 6.981805e-005f, 7.471898e-005f, 6.981805e-005f, 5.598273e-005f, 3.710001e-005f, 1.962940e-005f, 8.110750e-006f, }; 
+
+        final float[] Laplacian_7x7_sigma_1and4 = new float[] {
+            2.502123e-004f, 5.777487e-004f, 8.316200e-004f, 8.967564e-004f, 8.316200e-004f, 5.777487e-004f, 2.502123e-004f, 
+            5.777487e-004f, 9.295234e-004f, 5.289226e-004f, 5.056474e-005f, 5.289226e-004f, 9.295234e-004f, 5.777487e-004f, 
+            8.316200e-004f, 5.289226e-004f, -2.021333e-003f, -3.967426e-003f, -2.021333e-003f, 5.289226e-004f, 8.316200e-004f, 
+            8.967564e-004f, 5.056474e-005f, -3.967426e-003f, -6.873873e-003f, -3.967426e-003f, 5.056474e-005f, 8.967564e-004f, 
+            8.316200e-004f, 5.289226e-004f, -2.021333e-003f, -3.967426e-003f, -2.021333e-003f, 5.289226e-004f, 8.316200e-004f, 
+            5.777487e-004f, 9.295234e-004f, 5.289226e-004f, 5.056474e-005f, 5.289226e-004f, 9.295234e-004f, 5.777487e-004f, 
+            2.502123e-004f, 5.777487e-004f, 8.316200e-004f, 8.967564e-004f, 8.316200e-004f, 5.777487e-004f, 2.502123e-004f}; 
+          
+        
+        final float[] Laplacian_5x5 = new float[] {-1f, -1f, -1f, -1f, -1f, 
+                                                   -1f, -1f, -1f, -1f, -1f, 
+                                                   -1f, -1f, 24f, -1f, -1f, 
+                                                   -1f, -1f, -1f, -1f, -1f, 
+                                                   -1f, -1f, -1f, -1f, -1f};
+        
+        
+        if (jConvolve.isSelected()) {
+            ConvolveOp op = new ConvolveOp(makeKernel(Laplacian_5x5));
+            BufferedImage out = op.filter(image, null);
+            image = out; 
+            
+        } else {      
+            try {
+                image = ImageIO.read(new File(srcName));
+               
+            } catch (IOException ex) {
+                System.out.print(ex);
+                System.exit(-1);
+            } 
+        }
+          
+        cross = new Moments(image).getCoG(null);
+        
+        repaint();
     }//GEN-LAST:event_jConvolveActionPerformed
     
     /**

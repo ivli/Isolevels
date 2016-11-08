@@ -5,6 +5,9 @@
  */
 package isolevels;
 
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
 import java.awt.image.Raster;
@@ -13,23 +16,18 @@ import java.awt.image.Raster;
  *
  * @author likhachev
  */
-public class Moments {
-    
- 
+public class Moments {    
     double M;    
     double XM;
     double YM;
     double skewness;
     double kurtosis;
-   
-    int minThreshold; 
-    int maxThreshold;
-    
+     
     int width;
     int height;
     int pixels[];
     
-    Moments(BufferedImage aR) {        
+    public Moments(BufferedImage aR) {        
         width = aR.getWidth();
         height = aR.getHeight();
         pixels  = new int[width*height];
@@ -39,19 +37,30 @@ public class Moments {
         } catch (InterruptedException ex) {
             System.exit(-1);
         }
+       // calc();
     }
     
-    void calc(int rx, int ry, int rw, int rh) {
+    public Moments(int aWidth, int aHeight, int[] aPixels) {
+        width = aWidth;
+        height = aHeight;
+        pixels  = aPixels;
+    }
+    
+    public Point2D getCoG(Rectangle aR) {
+        if (null != aR)
+            calc(aR.x, aR.y, aR.width, aR.height);
+        else
+            calculateMoments(0,  0,  width, height);
+        return new Point2D.Double(XM, YM);
+    }
+    
+    private void calc(int rx, int ry, int rw, int rh) {
         if (rx < 0 || ry < 0 || (rx + rw) > width || (ry + rh) > height)
             throw new IllegalArgumentException("Wrong ROI");
         
         calculateMoments(rx, ry, rw, rh);
     }
-    
-    void calc() {        
-        calculateMoments(0,  0,  width, height);
-    }
-        
+       
     private void calculateMoments(int rx, int ry, int rw, int rh) {                          
         double v, v2, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
         for (int y=ry; y<(ry+rh); y++) {
