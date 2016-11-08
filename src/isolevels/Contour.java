@@ -20,48 +20,50 @@ public class Contour {
         render = aR;    
     }
               
-    enum DIR {E, N, W, S};
+    
+    private static final int E = 0; 
+    private static final int N = 1; 
+    private static final int W = 2; 
+    private static final int S = 3;           
+       
+    private static final int [][]MATRIX = {
+            /*E*/ {S, E, N, W},
+            /*N*/ {E, N, W, S},
+            /*W*/ {N, W, S, E},
+            /*S*/ {W, S, E, N},
+            }; 
     
     public void contour(int []d, int width, int height) {
         Point2D M = new Moments(width, height, d).getCoG(null);
-        //start from the center of gravity 
-        final int startX = (int)Math.floor(M.getX());
-        final int startY = (int)Math.floor(M.getY());
-       
-        //1. coordinates of the starting point where we have to return sometime    
-        int i = startX;
-        int j = startY;
         
-        DIR dir = DIR.W;
-                          
+        //1. let's start from the center of gravity 
+        int i = (int)Math.floor(M.getX());
+        int j = (int)Math.floor(M.getY());
+       
+        int dir = W;
+        //2. go west to find the starting point where we have to return sometime                  
         while (0 != d[j*width + i]) --i;                 
                               
         int x = i, y = j;       
-        int x1 = x, y1 = y; 
-
-        do {             
-            boolean [] va = {0 == d[(y)  *width + (x+1)], //E
-                             0 == d[(y-1)*width + (x)],   //N
-                             0 == d[(y)  *width + (x-1)], //W
-                             0 == d[(y+1)*width + (x)]};  //S
-            
-            final DIR [][]matrix = {
-            /*E*/ {DIR.S, DIR.E, DIR.N, DIR.W},
-            /*N*/ {DIR.E, DIR.N, DIR.W, DIR.S},
-            /*W*/ {DIR.N, DIR.W, DIR.S, DIR.E},
-            /*S*/ {DIR.W, DIR.S, DIR.E, DIR.N},
-            }; 
-
-            for (int k=0; k<matrix[dir.ordinal()].length; ++k) {            
-                if (va[(matrix[dir.ordinal()][k]).ordinal()]) {                                       
-                    switch(dir = matrix[dir.ordinal()][k]) {
+        int x1 = x, y1 = y;
+        boolean []va = {false, false, false, false};
+        //3. walk clockwise along the border 
+        do { 
+            va[E] = 0 == d[(y)  * width + (x+1)]; //E
+            va[W] = 0 == d[(y)  * width + (x-1)]; //W
+            va[N] = 0 == d[(y-1)* width + (x)];   //N            
+            va[S] = 0 == d[(y+1)* width + (x)];   //S
+        
+            for (int k=0; k<MATRIX[dir].length; ++k) {            
+                if (va[(MATRIX[dir][k])]) {                                       
+                    switch(dir = MATRIX[dir][k]) {
                         case E: ++x; break;
                         case W: --x; break;
                         case N: --y; break;                        
                         case S: ++y; break;
                     }
                     
-                    System.out.printf("-->next step is %s - %d, %d \n", dir.toString(), x, y); 
+                    System.out.printf("-->next step is %d - %d, %d \n", dir, x, y); 
                     break;
                 }                
             }
