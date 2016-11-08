@@ -19,8 +19,7 @@ public class Contour {
     Contour(Render aR) {
         render = aR;    
     }
-              
-    
+ 
     private static final int E = 0; 
     private static final int N = 1; 
     private static final int W = 2; 
@@ -68,7 +67,7 @@ public class Contour {
                 }                
             }
 
-            render.drawContour(x1, y1, x, y, 0);
+            render.addSegment(x1, y1, x, y, 0);
             x1 = x; y1 = y;
             
         } while (!(x == i && y == j));
