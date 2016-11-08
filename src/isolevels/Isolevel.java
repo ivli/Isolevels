@@ -78,12 +78,12 @@ public class Isolevel extends Path2D.Double {
     
     private java.lang.Double iLevel;
     
-    private Zcross iCon;
+    private Contour iCon;
       
     private Isolevel(Raster aSrc, Rectangle aRect) {
         iSrc = aSrc;
         iRect = aRect;
-        iCon = new Zcross((double sX, double sY, double eX, double eY, double aNotUsed) -> {moveTo(sX, sY); lineTo(eX, eY);});       
+        iCon = new Contour((double sX, double sY, double eX, double eY, double aNotUsed) -> {moveTo(sX, sY); lineTo(eX, eY);});       
      }  
     
     public static Isolevel create(Raster aSrc, Rectangle aRect, java.lang.Double aLevel) {
@@ -104,6 +104,6 @@ public class Isolevel extends Path2D.Double {
     
     public void update(double aLevel) {    
         reset();
-        iCon.zcross(iSrc.getPixels(0, 0, iSrc.getWidth(), iSrc.getHeight(), (int[]) null), iSrc.getWidth(), iSrc.getHeight());
+        iCon.contour(iSrc.getPixels(0, 0, iSrc.getWidth(), iSrc.getHeight(), (int[]) null), iSrc.getWidth(), iSrc.getHeight());
     }
 }

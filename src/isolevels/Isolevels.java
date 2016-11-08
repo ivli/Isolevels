@@ -32,7 +32,7 @@ public class Isolevels extends javax.swing.JFrame {
     String srcName;    
     BufferedImage image = null;
     Isolevel iso = null;
-    Zcross zc = null;
+    Contour zc = null;
     Shape shape = null;
     Rectangle2D rect = null;
     
