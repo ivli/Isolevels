@@ -33,8 +33,8 @@ public class Isolevels extends javax.swing.JFrame {
     Shape shape = null;
     Rectangle2D rect = null;    
     Point2D cross;
-    //Moments mom;
     
+   
     void setFile(String aName) {  
         image = null;
         iso = null;
@@ -70,9 +70,8 @@ public class Isolevels extends javax.swing.JFrame {
                         Rectangle r2 = new Rectangle();
                         r2.setFrameFromDiagonal(at.transform(p1, null), at.transform(p2, null));
                       
-                        iso = new Isolevel.IsolevelB(image, r2);                       
-                                                
-                       // AffineTransform to = at.createInverse();
+                        iso = Isolevel.create(jRadioButton1.isSelected(), image, r2);                       
+                                                                       
                         Moments mom = new Moments(image, r2);
                         
                         cross.setLocation(mom.getCoG());//.setLocation(mom.XM, mom.YM);                        
@@ -164,9 +163,12 @@ public class Isolevels extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
         jPanel = new javax.swing.JPanel();
         jLevel = new javax.swing.JSlider();
         jConvolve = new javax.swing.JCheckBox();
+        jRadioButton1 = new javax.swing.JRadioButton();
+        jRadioButton3 = new javax.swing.JRadioButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItemOpenFile = new javax.swing.JMenuItem();
@@ -181,10 +183,23 @@ public class Isolevels extends javax.swing.JFrame {
 
         jLevel.setOrientation(javax.swing.JSlider.VERTICAL);
 
+        jConvolve.setText("LoG image");
         jConvolve.setToolTipText("Convolve Image");
         jConvolve.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jConvolveActionPerformed(evt);
+            }
+        });
+
+        buttonGroup1.add(jRadioButton1);
+        jRadioButton1.setText("Contouring");
+
+        buttonGroup1.add(jRadioButton3);
+        jRadioButton3.setSelected(true);
+        jRadioButton3.setText("Isolevels");
+        jRadioButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton3ActionPerformed(evt);
             }
         });
 
@@ -213,13 +228,12 @@ public class Isolevels extends javax.swing.JFrame {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createSequentialGroup()
-                        .add(18, 18, 18)
-                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(layout.createSequentialGroup()
-                        .add(26, 26, 26)
-                        .add(jConvolve)))
+                    .add(jConvolve)
+                    .add(jRadioButton1)
+                    .add(jRadioButton3)
+                    .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -227,8 +241,12 @@ public class Isolevels extends javax.swing.JFrame {
             .add(layout.createSequentialGroup()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 367, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(30, 30, 30)
+                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 307, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .add(jRadioButton3)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .add(jRadioButton1)
+                        .add(18, 18, 18)
                         .add(jConvolve))
                     .add(layout.createSequentialGroup()
                         .addContainerGap()
@@ -329,6 +347,10 @@ public class Isolevels extends javax.swing.JFrame {
            repaint();
         }
     }//GEN-LAST:event_jMenuItemOpenFileActionPerformed
+
+    private void jRadioButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jRadioButton3ActionPerformed
     
     static Isolevels is;
     
@@ -371,6 +393,7 @@ public class Isolevels extends javax.swing.JFrame {
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JCheckBox jConvolve;
     private javax.swing.JSlider jLevel;
     private javax.swing.JMenu jMenu1;
@@ -378,6 +401,8 @@ public class Isolevels extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemOpenFile;
     private javax.swing.JPanel jPanel;
+    private javax.swing.JRadioButton jRadioButton1;
+    private javax.swing.JRadioButton jRadioButton3;
     // End of variables declaration//GEN-END:variables
     
 }

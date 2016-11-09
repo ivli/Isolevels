@@ -28,14 +28,17 @@ public abstract class Isolevel extends Path2D.Double {
     
     public abstract void update(double aLevel);
     
-    public static Isolevel create(BufferedImage aSrc, Rectangle aRect) {
-        return new IsolevelA(aSrc, aRect);
+    public static Isolevel create(boolean aT, BufferedImage aSrc, Rectangle aRect) {
+        if(aT)
+            return new IsolevelA(aSrc, aRect);
+        else
+            return new IsolevelB(aSrc, aRect);
     }
     
     protected Rectangle getRect() {return iRect;}
     protected BufferedImage getImage(){return iSrc;}
     
-    public static class IsolevelA extends Isolevel {    
+    private static class IsolevelA extends Isolevel {    
 
         public IsolevelA(BufferedImage aSrc, Rectangle aRect) {
             super(aSrc, aRect);        
@@ -66,7 +69,7 @@ public abstract class Isolevel extends Path2D.Double {
         }
     }
 
-    public static class IsolevelB extends Isolevel {    
+    private static class IsolevelB extends Isolevel {    
         
         public IsolevelB(BufferedImage aSrc, Rectangle aRect) {
             super(aSrc, aRect);       
