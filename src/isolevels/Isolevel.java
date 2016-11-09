@@ -7,6 +7,9 @@ package isolevels;
 
 import java.awt.Rectangle;
 import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.awt.image.Raster;
 
 /**
@@ -73,22 +76,21 @@ public class Isolevel extends Path2D.Double {
 */
 
 public class Isolevel extends Path2D.Double {    
-    private final Raster iSrc; 
-    private final Rectangle iRect;
+    private final BufferedImage iSrc; 
+    private final Rectangle    iRect;
     
     private java.lang.Double iLevel;
     
     private Contour iCon;
       
-    private Isolevel(Raster aSrc, Rectangle aRect) {
+    private Isolevel(BufferedImage aSrc, Rectangle aRect) {
         iSrc = aSrc;
         iRect = aRect;
         iCon = new Contour((double sX, double sY, double eX, double eY, double aNotUsed) -> {moveTo(sX, sY); lineTo(eX, eY);});       
-     }  
+    }  
     
-    public static Isolevel create(Raster aSrc, Rectangle aRect, java.lang.Double aLevel) {
+    public static Isolevel create(BufferedImage aSrc, Rectangle aRect, java.lang.Double aLevel) {
         Isolevel ret = new Isolevel(aSrc, aRect);
-        ret.init();
         
         if (null != aLevel)
             ret.update(aLevel);
@@ -98,12 +100,20 @@ public class Isolevel extends Path2D.Double {
            
     double min = java.lang.Double.MAX_VALUE;
     double max = java.lang.Double.MIN_VALUE;
+     
+    private static final float[] LoG_5x5 = {-1f, -1f, -1f, -1f, -1f, 
+                                                  -1f, -1f, -1f, -1f, -1f, 
+                                                  -1f, -1f, 24f, -1f, -1f, 
+                                                  -1f, -1f, -1f, -1f, -1f, 
+                                                  -1f, -1f, -1f, -1f, -1f};
     
-    private void init() {               
-    }
+    private static final Kernel KERNEL = new Kernel(5, 5, LoG_5x5);
     
     public void update(double aLevel) {    
         reset();
-        iCon.contour(iSrc.getPixels(0, 0, iSrc.getWidth(), iSrc.getHeight(), (int[]) null), iSrc.getWidth(), iSrc.getHeight());
+        BufferedImage in = new BufferedImage(iRect.width, iRect.height, iSrc.getType());
+        in.setData(iSrc.getRaster().createWritableChild(iRect.x, iRect.y, iRect.width, iRect.height, 0, 0, null));       
+        BufferedImage out = new ConvolveOp(KERNEL).filter(in, null);         
+        iCon.contour(out.getRaster().getPixels(0, 0, out.getWidth(), out.getHeight(), (int[]) null), out.getWidth(), out.getHeight());
     }
 }

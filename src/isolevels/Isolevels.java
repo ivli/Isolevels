@@ -68,12 +68,12 @@ public class Isolevels extends javax.swing.JFrame {
                                                                             
                         Rectangle r2 = new Rectangle();
                         r2.setFrameFromDiagonal(at.transform(p1, null), at.transform(p2, null));
-                       
-                        WritableRaster wr = image.getRaster().createWritableChild(r2.x, r2.y, r2.width, r2.height, 0, 0, null); 
                         /*
+                        WritableRaster wr = image.getRaster().createWritableChild(r2.x, r2.y, r2.width, r2.height, 0, 0, null); 
+                        
                         image = new BufferedImage(image.getColorModel(), wr, false, null);                                                 
                         */
-                        iso = Isolevel.create(wr, null, null);
+                        iso = Isolevel.create(image, r2, null);
                         cross = mom.getCoG(r2);
                         AffineTransform to;
                         
