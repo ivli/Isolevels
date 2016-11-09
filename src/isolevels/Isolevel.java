@@ -102,10 +102,10 @@ public class Isolevel extends Path2D.Double {
     double max = java.lang.Double.MIN_VALUE;
      
     private static final float[] LoG_5x5 = {-1f, -1f, -1f, -1f, -1f, 
-                                                  -1f, -1f, -1f, -1f, -1f, 
-                                                  -1f, -1f, 24f, -1f, -1f, 
-                                                  -1f, -1f, -1f, -1f, -1f, 
-                                                  -1f, -1f, -1f, -1f, -1f};
+                                            -1f, -1f, -1f, -1f, -1f, 
+                                            -1f, -1f, 24f, -1f, -1f, 
+                                            -1f, -1f, -1f, -1f, -1f, 
+                                            -1f, -1f, -1f, -1f, -1f};
     
     private static final Kernel KERNEL = new Kernel(5, 5, LoG_5x5);
     

@@ -1,6 +1,7 @@
 package isolevels;
 
 import java.awt.Color;
+import java.awt.FileDialog;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -18,15 +19,12 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 
 public class Isolevels extends javax.swing.JFrame {
     String srcName;    
@@ -34,24 +32,28 @@ public class Isolevels extends javax.swing.JFrame {
     Isolevel iso = null;
     Contour zc = null;
     Shape shape = null;
-    Rectangle2D rect = null;
+    Rectangle2D rect = null;    
+    Point2D cross;
+    //Moments mom;
     
-    Point2D cross;// = new Path2D.Double();
-   
-    public Isolevels(final String aF) {
-        initComponents();
-        srcName = aF;
-        //File srcFile = new File(srcName);
-        Moments mom;
+    void setFile(String aName) {  
+        image = null;
+        iso = null;
+        zc = null;
+        shape = null;
+        rect = null;
+       // mom = null;
+        
         try {
-            image = ImageIO.read(new File(srcName));
-            mom = new Moments(image);                                    
-            cross = mom.getCoG(null);///new Point2D.Double(mom.XM, mom.YM);
             
+            image = ImageIO.read(new File(srcName=aName));
+            //mom = new Moments(image);                                    
+            cross = new Moments(image).getCoG(null);
+            jPanel.removeAll();
+                
             jPanel.add(new JComponent() {
                 Point p1;
-                Point p2;
-
+                
                 {
                 addMouseListener(new MouseAdapter() {                   
                     @Override
@@ -61,55 +63,41 @@ public class Isolevels extends javax.swing.JFrame {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        p2 = e.getPoint();                        
+                        Point p2 = e.getPoint();                        
                         rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
                        
-                        AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth() / (double)getWidth(), (double)image.getHeight() / (double)getHeight()); 
+                        AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth()/(double)getWidth(), (double)image.getHeight()/(double)getHeight()); 
                                                                             
                         Rectangle r2 = new Rectangle();
                         r2.setFrameFromDiagonal(at.transform(p1, null), at.transform(p2, null));
-                        /*
-                        WritableRaster wr = image.getRaster().createWritableChild(r2.x, r2.y, r2.width, r2.height, 0, 0, null); 
-                        
-                        image = new BufferedImage(image.getColorModel(), wr, false, null);                                                 
-                        */
-                        iso = Isolevel.create(image, r2, null);
-                        cross = mom.getCoG(r2);
-                        AffineTransform to;
-                        
-                        try { 
-                            to = at.createInverse();
-                            cross.setLocation(mom.XM, mom.YM);                        
+                      
+                        iso = Isolevel.create(image, r2, null);                       
+                                                
+                       // AffineTransform to = at.createInverse();
+                        cross.setLocation(new Moments(image).getCoG(r2));//.setLocation(mom.XM, mom.YM);                        
 
-                            System.out.printf("--> %f, %f\n", cross.getX(), cross.getY());
-                        
-                        
-                        jLevel.addChangeListener(new ChangeListener() {
-                            @Override
-                            public void stateChanged(ChangeEvent e) {
-                                JSlider source = (JSlider)e.getSource();
-                                if (!source. getValueIsAdjusting()) {
-                                    iso.update(source.getValue());
-                                    AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
-                                    shape = to.createTransformedShape(iso);
-                                    shape = to2.createTransformedShape(shape);                                       
-                                    repaint();                                                    
-                                }
-                            }                                                
+                        System.out.printf("--> %f, %f\n", cross.getX(), cross.getY());
+
+                        jLevel.addChangeListener((ChangeEvent evt) -> {
+                            JSlider source = (JSlider)evt.getSource();
+                            if (!source. getValueIsAdjusting()) {
+                                iso.update(source.getValue());
+                                AffineTransform to = AffineTransform.getScaleInstance((double)(double)getWidth()/image.getWidth(), (double)getHeight()/(double)image.getHeight()); 
+                                AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
+                                shape = to.createTransformedShape(iso);
+                                shape = to2.createTransformedShape(shape);                                       
+                                repaint();                                                    
+                            }                                                                            
                         });
                                                 
                         jLevel.setMinimum((int)iso.min);
                         jLevel.setMaximum((int)iso.max);
                         jLevel.setValue((int)((iso.max - iso.min) / 2.));                       
-                   
-                        } catch (NoninvertibleTransformException ex) {  
-                            
-                        }
                     }});
 
                 addMouseMotionListener(new MouseAdapter() {
                     public void mouseDragged(MouseEvent e) {                                             
-                        p2 = e.getPoint();
+                        Point p2 = e.getPoint();
                         rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));                 
                         repaint();
                     }                   
@@ -144,16 +132,22 @@ public class Isolevels extends javax.swing.JFrame {
                         p.lineTo(x, y + 5);
                         g2d.setPaint(Color.BLUE);
                         g2d.draw(p);   
-                    }
-                    
-                }  
-                
+                    }                    
+                }                  
             });    
              
         } catch (IOException ex) {            
             System.out.println("unable to open: " + srcName + ", cause:" + ex.getLocalizedMessage());             
             System.exit(-1);
         }  
+
+    }
+    
+    public Isolevels(final String aF) {
+        initComponents();
+        if (null != aF)
+            setFile(aF);
+        
     }
     
     
@@ -172,6 +166,10 @@ public class Isolevels extends javax.swing.JFrame {
         jPanel = new javax.swing.JPanel();
         jLevel = new javax.swing.JSlider();
         jConvolve = new javax.swing.JCheckBox();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        jMenuItemOpenFile = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Antenna");
@@ -188,6 +186,24 @@ public class Isolevels extends javax.swing.JFrame {
                 jConvolveActionPerformed(evt);
             }
         });
+
+        jMenu1.setText("File");
+
+        jMenuItemOpenFile.setText("Open file");
+        jMenuItemOpenFile.setActionCommand("OpenFile");
+        jMenuItemOpenFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemOpenFileActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemOpenFile);
+
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Edit");
+        jMenuBar1.add(jMenu2);
+
+        setJMenuBar(jMenuBar1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -210,13 +226,13 @@ public class Isolevels extends javax.swing.JFrame {
             .add(layout.createSequentialGroup()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 379, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(18, 18, 18)
+                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 367, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(30, 30, 30)
                         .add(jConvolve))
                     .add(layout.createSequentialGroup()
                         .addContainerGap()
                         .add(jPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -300,6 +316,20 @@ public class Isolevels extends javax.swing.JFrame {
         
         repaint();
     }//GEN-LAST:event_jConvolveActionPerformed
+
+    private void jMenuItemOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemOpenFileActionPerformed
+        FileDialog fc = new FileDialog(this);
+        
+        fc.setVisible(true);
+        
+        if (null != fc.getFile()) {
+           is.setFile(fc.getDirectory() + '/' + fc.getFile());
+           jPanel.validate();
+           repaint();
+        }
+    }//GEN-LAST:event_jMenuItemOpenFileActionPerformed
+    
+    static Isolevels is;
     
     /**
      * @param args the command line arguments
@@ -332,8 +362,9 @@ public class Isolevels extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {  
-                System.out.println("-->Starting up");    
-                new Isolevels(args[0]).setVisible(true);
+                System.out.println("-->Starting up");                    
+                is = new Isolevels(args[0]);
+                is.setVisible(true);
             }
         });
     }
@@ -341,6 +372,10 @@ public class Isolevels extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox jConvolve;
     private javax.swing.JSlider jLevel;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemOpenFile;
     private javax.swing.JPanel jPanel;
     // End of variables declaration//GEN-END:variables
     
