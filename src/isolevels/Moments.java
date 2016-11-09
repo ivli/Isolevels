@@ -5,12 +5,11 @@
  */
 package isolevels;
 
-import java.awt.Point;
+
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
-import java.awt.image.Raster;
 
 /**
  *
@@ -22,47 +21,51 @@ public class Moments {
     double YM;
     double skewness;
     double kurtosis;
-     
-    int width;
-    int height;
-    int pixels[];
+    double min;
+    double max;
     
-    public Moments(BufferedImage aR) {        
-        width = aR.getWidth();
-        height = aR.getHeight();
-        pixels  = new int[width*height];
-        PixelGrabber pg = new PixelGrabber(aR, 0, 0, width, height, pixels, 0, width);
-        try {
-            pg.grabPixels();
-        } catch (InterruptedException ex) {
-            System.exit(-1);
-        }
-       // calc();
+    private int width;
+    private int height;
+    private int pixels[];
+   
+    
+    public Moments(BufferedImage aI, Rectangle aR) {        
+        width = aI.getWidth();
+        height = aI.getHeight();
+        pixels = aI.getRaster().getPixels(0, 0, width, height, (int[])null);      
+        calculate(aR);
     }
     
     public Moments(int aWidth, int aHeight, int[] aPixels) {
         width = aWidth;
         height = aHeight;
-        pixels  = aPixels;
+        pixels = aPixels;
+        calculateMoments(0, 0, width, height);
     }
     
-    public Point2D getCoG(Rectangle aR) {
-        if (null != aR)
-            calc(aR.x, aR.y, aR.width, aR.height);
-        else
-            calculateMoments(0,  0,  width, height);
+    public Point2D getCoG() {        
         return new Point2D.Double(XM, YM);
     }
     
-    private void calc(int rx, int ry, int rw, int rh) {
-        if (rx < 0 || ry < 0 || (rx + rw) > width || (ry + rh) > height)
-            throw new IllegalArgumentException("Wrong ROI");
-        
-        calculateMoments(rx, ry, rw, rh);
+    public double getMin() {return min;}
+    public double getMax() {return max;}
+    public double getMed() {return (max - min) / 2.;}
+    
+    void calculate(Rectangle aR) {
+        if (null == aR)
+            calculateMoments(0, 0, width, height);
+        else {
+            if (aR.x < 0 || aR.y < 0 || (aR.x + aR.width) > width || (aR.y + aR.height) > height)
+                throw new IllegalArgumentException("Wrong ROI");
+
+            calculateMoments(aR.x, aR.y, aR.width, aR.height);
+        }
     }
        
     private void calculateMoments(int rx, int ry, int rw, int rh) {                          
         double v, v2, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
+        min = Double.MAX_VALUE;
+        max = Double.MIN_VALUE;
         for (int y=ry; y<(ry+rh); y++) {
                 int i = y*width + rx;                    
                 for (int x=rx; x<(rx+rw); x++) {				
@@ -74,6 +77,8 @@ public class Moments {
                     sum4 += v2*v2;
                     xsum += x*v;
                     ysum += y*v;
+                    min = Math.min(v, min);
+                    max = Math.max(v, max);
                     i++;
                 }
         }

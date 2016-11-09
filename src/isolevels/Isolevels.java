@@ -11,7 +11,6 @@ import java.awt.Shape;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -48,7 +47,7 @@ public class Isolevels extends javax.swing.JFrame {
             
             image = ImageIO.read(new File(srcName=aName));
             //mom = new Moments(image);                                    
-            cross = new Moments(image).getCoG(null);
+            cross = new Moments(image, null).getCoG();
             jPanel.removeAll();
                 
             jPanel.add(new JComponent() {
@@ -71,10 +70,12 @@ public class Isolevels extends javax.swing.JFrame {
                         Rectangle r2 = new Rectangle();
                         r2.setFrameFromDiagonal(at.transform(p1, null), at.transform(p2, null));
                       
-                        iso = Isolevel.create(image, r2, null);                       
+                        iso = new Isolevel.IsolevelB(image, r2);                       
                                                 
                        // AffineTransform to = at.createInverse();
-                        cross.setLocation(new Moments(image).getCoG(r2));//.setLocation(mom.XM, mom.YM);                        
+                        Moments mom = new Moments(image, r2);
+                        
+                        cross.setLocation(mom.getCoG());//.setLocation(mom.XM, mom.YM);                        
 
                         System.out.printf("--> %f, %f\n", cross.getX(), cross.getY());
 
@@ -90,9 +91,9 @@ public class Isolevels extends javax.swing.JFrame {
                             }                                                                            
                         });
                                                 
-                        jLevel.setMinimum((int)iso.min);
-                        jLevel.setMaximum((int)iso.max);
-                        jLevel.setValue((int)((iso.max - iso.min) / 2.));                       
+                        jLevel.setMinimum((int)mom.getMin());
+                        jLevel.setMaximum((int)mom.getMax());
+                        jLevel.setValue((int)mom.getMed());                       
                     }});
 
                 addMouseMotionListener(new MouseAdapter() {
@@ -312,7 +313,7 @@ public class Isolevels extends javax.swing.JFrame {
             } 
         }
           
-        cross = new Moments(image).getCoG(null);
+        cross = new Moments(image, null).getCoG();
         
         repaint();
     }//GEN-LAST:event_jConvolveActionPerformed

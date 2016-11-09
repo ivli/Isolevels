@@ -33,7 +33,7 @@ public class Contour {
             }; 
     
     public void contour(int []d, int width, int height) {
-        Point2D M = new Moments(width, height, d).getCoG(null);
+        Point2D M = new Moments(width, height, d).getCoG();
         
         //1. let's start from the center of gravity 
         int i = (int)Math.floor(M.getX());
