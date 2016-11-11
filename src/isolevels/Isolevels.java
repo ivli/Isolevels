@@ -17,14 +17,15 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
-import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
-
+import static isolevels.Kernels.LOG55;
+        
 public class Isolevels extends javax.swing.JFrame {
     String srcName;    
     BufferedImage image = null;
@@ -33,26 +34,22 @@ public class Isolevels extends javax.swing.JFrame {
     Shape shape = null;
     Rectangle2D rect = null;    
     Point2D cross;
-    
-   
+      
     void setFile(String aName) {  
         image = null;
         iso = null;
         zc = null;
         shape = null;
-        rect = null;
-       // mom = null;
+        rect = null;     
         
-        try {
-            
-            image = ImageIO.read(new File(srcName=aName));
-            //mom = new Moments(image);                                    
+        try {            
+            image = ImageIO.read(new File(srcName=aName));                                               
             cross = new Moments(image, null).getCoG();
             jPanel.removeAll();
                 
             jPanel.add(new JComponent() {
-                Point p1;
-                
+                Point p1;   
+                AffineTransform scale; 
                 {
                 addMouseListener(new MouseAdapter() {                   
                     @Override
@@ -62,7 +59,10 @@ public class Isolevels extends javax.swing.JFrame {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        Point p2 = e.getPoint();                        
+                        Point p2 = e.getPoint();             
+                        if (p1.equals(p2))
+                            return;
+                        
                         rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
                        
                         AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth()/(double)getWidth(), (double)image.getHeight()/(double)getHeight()); 
@@ -71,23 +71,19 @@ public class Isolevels extends javax.swing.JFrame {
                         r2.setFrameFromDiagonal(at.transform(p1, null), at.transform(p2, null));
                       
                         iso = Isolevel.create(jRadioButton1.isSelected(), image, r2);                       
-                                                                       
+                                                    
                         Moments mom = new Moments(image, r2);
                         
                         cross.setLocation(mom.getCoG());//.setLocation(mom.XM, mom.YM);                        
-
-                        System.out.printf("--> %f, %f\n", cross.getX(), cross.getY());
-
+                        
                         jLevel.addChangeListener((ChangeEvent evt) -> {
                             JSlider source = (JSlider)evt.getSource();
-                            if (!source. getValueIsAdjusting()) {
+                           // if (!source. getValueIsAdjusting()) {
                                 iso.update(source.getValue());
-                                AffineTransform to = AffineTransform.getScaleInstance((double)(double)getWidth()/image.getWidth(), (double)getHeight()/(double)image.getHeight()); 
-                                AffineTransform to2 = AffineTransform.getTranslateInstance(rect.getX(), rect.getY());                                        
-                                shape = to.createTransformedShape(iso);
-                                shape = to2.createTransformedShape(shape);                                       
+                                shape = AffineTransform.getTranslateInstance(rect.getX(), rect.getY())
+                                                       .createTransformedShape(scale.createTransformedShape(iso));                                       
                                 repaint();                                                    
-                            }                                                                            
+                           // }                                                                            
                         });
                                                 
                         jLevel.setMinimum((int)mom.getMin());
@@ -103,12 +99,11 @@ public class Isolevels extends javax.swing.JFrame {
                     }                   
                 });
                 }
+                
                 @Override
-                public void paintComponent(Graphics g) {                                                          
-                    AffineTransformOp op = new AffineTransformOp(
-                                                 AffineTransform.getScaleInstance((double)getWidth()/(double)image.getWidth(), (double)getHeight()/(double)image.getHeight()), 
-                                                    AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-                    BufferedImage buf = op.filter(image, null);
+                public void paintComponent(Graphics g) {   
+                    scale = AffineTransform.getScaleInstance((double)getWidth()/(double)image.getWidth(), (double)getHeight()/(double)image.getHeight());                   
+                    BufferedImage buf = new AffineTransformOp(scale, AffineTransformOp.TYPE_NEAREST_NEIGHBOR).filter(image, null);
                     g.drawImage(buf, 0, 0, buf.getWidth(), buf.getHeight(), null);
                     
                     Graphics2D g2d = (Graphics2D)g;
@@ -137,23 +132,16 @@ public class Isolevels extends javax.swing.JFrame {
             });    
              
         } catch (IOException ex) {            
-            System.out.println("unable to open: " + srcName + ", cause:" + ex.getLocalizedMessage());             
-            System.exit(-1);
+            JOptionPane.showMessageDialog(this, "Unable to open file" + ex.getLocalizedMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }  
-
     }
     
     public Isolevels(final String aF) {
         initComponents();
         if (null != aF)
-            setFile(aF);
-        
-    }
+            setFile(aF);        
+    }    
     
-    
-    Kernel makeKernel(float[] aK){             
-        return new Kernel ((int)Math.sqrt(aK.length), (int)Math.sqrt(aK.length), aK);
-    };
    
     /** This method is called from within the constructor to
      * initialize the form.
@@ -164,11 +152,17 @@ public class Isolevels extends javax.swing.JFrame {
     private void initComponents() {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
+        buttonGroup2 = new javax.swing.ButtonGroup();
         jPanel = new javax.swing.JPanel();
         jLevel = new javax.swing.JSlider();
-        jConvolve = new javax.swing.JCheckBox();
-        jRadioButton1 = new javax.swing.JRadioButton();
+        jPanel1 = new javax.swing.JPanel();
+        jRadioButton4 = new javax.swing.JRadioButton();
         jRadioButton3 = new javax.swing.JRadioButton();
+        jRadioButton5 = new javax.swing.JRadioButton();
+        jPanel2 = new javax.swing.JPanel();
+        jRadioButton2 = new javax.swing.JRadioButton();
+        jRadioButton1 = new javax.swing.JRadioButton();
+        jLevel1 = new javax.swing.JSlider();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItemOpenFile = new javax.swing.JMenuItem();
@@ -182,26 +176,105 @@ public class Isolevels extends javax.swing.JFrame {
         jPanel.setLayout(new java.awt.BorderLayout());
 
         jLevel.setOrientation(javax.swing.JSlider.VERTICAL);
-
-        jConvolve.setText("LoG image");
-        jConvolve.setToolTipText("Convolve Image");
-        jConvolve.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jConvolveActionPerformed(evt);
+        jLevel.setToolTipText("Adjust level");
+        jLevel.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jLevelStateChanged(evt);
             }
         });
 
-        buttonGroup1.add(jRadioButton1);
-        jRadioButton1.setText("Contouring");
+        jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        buttonGroup1.add(jRadioButton3);
+        buttonGroup2.add(jRadioButton4);
+        jRadioButton4.setText("LoG");
+        jRadioButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton4ActionPerformed(evt);
+            }
+        });
+
+        buttonGroup2.add(jRadioButton3);
         jRadioButton3.setSelected(true);
-        jRadioButton3.setText("Isolevels");
+        jRadioButton3.setText("None");
         jRadioButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jRadioButton3ActionPerformed(evt);
             }
         });
+
+        buttonGroup2.add(jRadioButton5);
+        jRadioButton5.setText("Otsu");
+        jRadioButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton5ActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jRadioButton3)
+                    .add(jRadioButton4)
+                    .add(jRadioButton5))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jRadioButton3)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(jRadioButton4)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(jRadioButton5)
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+        buttonGroup1.add(jRadioButton2);
+        jRadioButton2.setText("Contouring");
+        jRadioButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton2ActionPerformed(evt);
+            }
+        });
+
+        buttonGroup1.add(jRadioButton1);
+        jRadioButton1.setSelected(true);
+        jRadioButton1.setText("Isolevels");
+        jRadioButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton1ActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jRadioButton2)
+                    .add(jRadioButton1))
+                .addContainerGap(8, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jRadioButton1)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(jRadioButton2)
+                .addContainerGap())
+        );
+
+        jLevel1.setOrientation(javax.swing.JSlider.VERTICAL);
 
         jMenu1.setText("File");
 
@@ -230,112 +303,64 @@ public class Isolevels extends javax.swing.JFrame {
                 .add(jPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jConvolve)
-                    .add(jRadioButton1)
-                    .add(jRadioButton3)
-                    .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(layout.createSequentialGroup()
+                        .add(jLevel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 307, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(7, 7, 7)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jLevel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 235, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jLevel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 235, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jRadioButton3)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jRadioButton1)
-                        .add(18, 18, 18)
-                        .add(jConvolve))
+                        .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(20, 20, 20)
+                        .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .add(layout.createSequentialGroup()
                         .addContainerGap()
                         .add(jPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jConvolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jConvolveActionPerformed
-        
-        final float[] emboss = new float[] { -2,0,0,   0,1,0,   0,0,2 };
-        final float[] blurring = new float[] { 1f/9f,1f/9f,1f/9f, 1f/9f,1f/9f,1f/9f, 1f/9f,1f/9f,1f/9f };
-        final float[] sharpening = new float[] { -1,-1,-1,   -1,9,-1,   -1,-1,-1 };
-        
-        final float[] Gauss_5x5 = new float[] { 1,  4,  7,  4, 1,
-                                                4, 16, 26, 16, 4,
-                                                7, 26, 41, 26, 7,
-                                                4, 16, 26, 16, 4,
-                                                1,  4,  7,  4, 1
-        };
-        
-        final float[] Gauss_3x3_sigma1 = new float[] {0.077847f, 0.123317f, 0.077847f, 
-                                                      0.123317f, 0.195346f, 0.123317f, 
-                                                      0.077847f, 0.123317f, 0.077847f};
-        
-        final float[] Gauss_3x3_sigma3 = new float[] {0.107035f, 0.113092f, 0.107035f,
-                                                      0.113092f, 0.119491f, 0.113092f,
-                                                      0.107035f, 0.113092f, 0.107035f};
-        
-        final float[] Laplacian_3x3 = new float[] { 0, -1,  0,
-                                                   -1,  4, -1,
-                                                    0, -1,  0};    
-        
-        final float[] Laplacian_3x3_sigma_1point4 = new float[] { -0.0037480f,  -0.0073566f,  -0.0037480f,
-                                                                  -0.0073566f,  -0.0127458f,  -0.0073566f,
-                                                                  -0.0037480f,  -0.0073566f,  -0.0037480f};
-        
-        final float[] Laplacian_11x11_sigma_2 = new float[] { 
-            8.110750e-006f, 1.962940e-005f, 3.710001e-005f, 5.598273e-005f, 6.981805e-005f, 7.471898e-005f, 6.981805e-005f, 5.598273e-005f, 3.710001e-005f, 1.962940e-005f, 8.110750e-006f, 
-            1.962940e-005f, 4.397295e-005f, 7.471898e-005f, 9.853654e-005f, 1.075274e-004f, 1.083062e-004f, 1.075274e-004f, 9.853654e-005f, 7.471898e-005f, 4.397295e-005f, 1.962940e-005f, 
-            3.710001e-005f, 7.471898e-005f, 1.054362e-004f, 9.849036e-005f, 5.732105e-005f, 3.247663e-005f, 5.732105e-005f, 9.849036e-005f, 1.054362e-004f, 7.471898e-005f, 3.710001e-005f, 
-            5.598273e-005f, 9.853654e-005f, 9.849036e-005f, 0.000000e+000f, -1.606347e-004f, -2.426973e-004f, -1.606347e-004f, 0.000000e+000f, 9.849036e-005f, 9.853654e-005f, 5.598273e-005f, 
-            6.981805e-005f, 1.075274e-004f, 5.732105e-005f, -1.606347e-004f, -4.674443e-004f, -6.179644e-004f, -4.674443e-004f, -1.606347e-004f, 5.732105e-005f, 1.075274e-004f, 6.981805e-005f, 
-            7.471898e-005f, 1.083062e-004f, 3.247663e-005f, -2.426973e-004f, -6.179644e-004f, -8.002805e-004f, -6.179644e-004f, -2.426973e-004f, 3.247663e-005f, 1.083062e-004f, 7.471898e-005f, 
-            6.981805e-005f, 1.075274e-004f, 5.732105e-005f, -1.606347e-004f, -4.674443e-004f, -6.179644e-004f, -4.674443e-004f, -1.606347e-004f, 5.732105e-005f, 1.075274e-004f, 6.981805e-005f, 
-            5.598273e-005f, 9.853654e-005f, 9.849036e-005f, 0.000000e+000f, -1.606347e-004f, -2.426973e-004f, -1.606347e-004f, 0.000000e+000f, 9.849036e-005f, 9.853654e-005f, 5.598273e-005f, 
-            3.710001e-005f, 7.471898e-005f, 1.054362e-004f, 9.849036e-005f, 5.732105e-005f, 3.247663e-005f, 5.732105e-005f, 9.849036e-005f, 1.054362e-004f, 7.471898e-005f, 3.710001e-005f, 
-            1.962940e-005f, 4.397295e-005f, 7.471898e-005f, 9.853654e-005f, 1.075274e-004f, 1.083062e-004f, 1.075274e-004f, 9.853654e-005f, 7.471898e-005f, 4.397295e-005f, 1.962940e-005f, 
-            8.110750e-006f, 1.962940e-005f, 3.710001e-005f, 5.598273e-005f, 6.981805e-005f, 7.471898e-005f, 6.981805e-005f, 5.598273e-005f, 3.710001e-005f, 1.962940e-005f, 8.110750e-006f, }; 
-
-        final float[] Laplacian_7x7_sigma_1and4 = new float[] {
-            2.502123e-004f, 5.777487e-004f, 8.316200e-004f, 8.967564e-004f, 8.316200e-004f, 5.777487e-004f, 2.502123e-004f, 
-            5.777487e-004f, 9.295234e-004f, 5.289226e-004f, 5.056474e-005f, 5.289226e-004f, 9.295234e-004f, 5.777487e-004f, 
-            8.316200e-004f, 5.289226e-004f, -2.021333e-003f, -3.967426e-003f, -2.021333e-003f, 5.289226e-004f, 8.316200e-004f, 
-            8.967564e-004f, 5.056474e-005f, -3.967426e-003f, -6.873873e-003f, -3.967426e-003f, 5.056474e-005f, 8.967564e-004f, 
-            8.316200e-004f, 5.289226e-004f, -2.021333e-003f, -3.967426e-003f, -2.021333e-003f, 5.289226e-004f, 8.316200e-004f, 
-            5.777487e-004f, 9.295234e-004f, 5.289226e-004f, 5.056474e-005f, 5.289226e-004f, 9.295234e-004f, 5.777487e-004f, 
-            2.502123e-004f, 5.777487e-004f, 8.316200e-004f, 8.967564e-004f, 8.316200e-004f, 5.777487e-004f, 2.502123e-004f}; 
-          
-        
-        final float[] Laplacian_5x5 = new float[] {-1f, -1f, -1f, -1f, -1f, 
-                                                   -1f, -1f, -1f, -1f, -1f, 
-                                                   -1f, -1f, 24f, -1f, -1f, 
-                                                   -1f, -1f, -1f, -1f, -1f, 
-                                                   -1f, -1f, -1f, -1f, -1f};
-        
-        
-        if (jConvolve.isSelected()) {
-            ConvolveOp op = new ConvolveOp(makeKernel(Laplacian_5x5));
-            BufferedImage out = op.filter(image, null);
-            image = out; 
-            
-        } else {      
-            try {
-                image = ImageIO.read(new File(srcName));
-               
-            } catch (IOException ex) {
-                System.out.print(ex);
-                System.exit(-1);
-            } 
+    enum OP{
+        NONE,
+        LOG,
+        OTSU
+    };        
+    
+    void preprocess(OP aOp) {        
+        switch(aOp) {
+            case NONE:                   
+                try {
+                    image = ImageIO.read(new File(srcName));               
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Unable to open file" + ex.getLocalizedMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                    return;
+                } break;           
+            case LOG: {                     
+                BufferedImage out = new ConvolveOp(LOG55).filter(image, null);
+                image = out;
+                } break; 
+            case OTSU: 
+                JOptionPane.showMessageDialog(this, "Not implemented yet", "ERROR", JOptionPane.ERROR_MESSAGE);
+                return;
         }
           
         cross = new Moments(image, null).getCoG();
         
-        repaint();
-    }//GEN-LAST:event_jConvolveActionPerformed
-
+    }
+    
     private void jMenuItemOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemOpenFileActionPerformed
         FileDialog fc = new FileDialog(this);
         
@@ -347,10 +372,46 @@ public class Isolevels extends javax.swing.JFrame {
            repaint();
         }
     }//GEN-LAST:event_jMenuItemOpenFileActionPerformed
+    
+    private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton1ActionPerformed
+        // TODO add your handling code here:
+        OP op = OP.NONE;
+        ///if (jRadioButton3)
+        if (jRadioButton4.isSelected())
+            op = OP.LOG;
+        else if (jRadioButton5.isSelected())
+            op = OP.LOG;
+                
+        preprocess(op);
+        repaint();
+    }//GEN-LAST:event_jRadioButton1ActionPerformed
+
+    private void jRadioButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton4ActionPerformed
+        // TODO add your handling code here:
+        preprocess(OP.LOG);
+        repaint();
+    }//GEN-LAST:event_jRadioButton4ActionPerformed
+
+    private void jRadioButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton5ActionPerformed
+        // TODO add your handling code here:
+        preprocess(OP.OTSU);
+        repaint();
+    }//GEN-LAST:event_jRadioButton5ActionPerformed
 
     private void jRadioButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton3ActionPerformed
         // TODO add your handling code here:
+        preprocess(OP.NONE);
+        repaint();
     }//GEN-LAST:event_jRadioButton3ActionPerformed
+
+    private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
+        // TODO add your handling code here:
+        jRadioButton1ActionPerformed(evt);
+    }//GEN-LAST:event_jRadioButton2ActionPerformed
+
+    private void jLevelStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jLevelStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLevelStateChanged
     
     static Isolevels is;
     
@@ -394,15 +455,21 @@ public class Isolevels extends javax.swing.JFrame {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.JCheckBox jConvolve;
+    private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JSlider jLevel;
+    private javax.swing.JSlider jLevel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemOpenFile;
     private javax.swing.JPanel jPanel;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JRadioButton jRadioButton1;
+    private javax.swing.JRadioButton jRadioButton2;
     private javax.swing.JRadioButton jRadioButton3;
+    private javax.swing.JRadioButton jRadioButton4;
+    private javax.swing.JRadioButton jRadioButton5;
     // End of variables declaration//GEN-END:variables
     
 }
