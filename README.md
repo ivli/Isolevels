@@ -1,14 +1,11 @@
-Isolevel ROI creation based on following works. 
+Image segmentation aids.
+Isolevel creation is based on works of http://paulbourke.net/papers/conrec et al
+while contouring algorithm spun off of 
+http://cyberleninka.ru/article/n/algoritm-postroeniya-kontura-ploskoy-figury
+Base tresholding is done by means LoG (Laplacian of Gaussian) filter 
 
-/**
- * Conrec a straightforward method of contouring some surface represented a regular 
- * triangular mesh. 
- *
- * Ported from the C++ code by Nicholas Yue (see above copyright notice).
- * @see http://paulbourke.net/papers/conrec for full description
- * of code and original C++ source.
- *
- * @author  Bradley White
- * @version 1.0 
- */
 
+it is far from being complete but workin' 
+
+Cheers,
+I.
