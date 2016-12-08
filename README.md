@@ -10,8 +10,9 @@ Following thresholding methods available
 1. Laplacian of Gaussian filter 
 2. Otsu histogram              
 
-It can read JPEG and DICOM images, for latter dcm4che is needed.
- 
+It can read JPEG and DICOM images, for latter dcm4che is needed. 
+
+Ensure you have [Roim](https://github.com/ivli/roim) library available.   
 
 it is far from being complete but workin' 
 
