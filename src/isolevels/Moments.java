@@ -27,8 +27,7 @@ public class Moments {
     private int width;
     private int height;
     private int pixels[];
-   
-    
+       
     public Moments(BufferedImage aI, Rectangle aR) {        
         width = aI.getWidth();
         height = aI.getHeight();

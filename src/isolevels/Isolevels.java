@@ -1,5 +1,6 @@
 package isolevels;
 
+
 import java.awt.Color;
 import java.awt.FileDialog;
 
@@ -24,9 +25,14 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
+import com.ivli.roim.view.VOITransform;
+import com.ivli.roim.view.WindowTarget;
+import com.ivli.roim.controls.LUTControl;
+import com.ivli.roim.core.Curve;
+import com.ivli.roim.core.Window;
 import static isolevels.Kernels.LOG55;
-        
-public class Isolevels extends javax.swing.JFrame {
+
+public class Isolevels extends javax.swing.JFrame implements WindowTarget {
     String srcName;    
     BufferedImage image = null;
     Isolevel iso = null;
@@ -34,7 +40,19 @@ public class Isolevels extends javax.swing.JFrame {
     Shape shape = null;
     Rectangle2D rect = null;    
     Point2D cross;
+    VOITransform lut;
+    LUTControl lc;
+    
       
+    public Isolevels(final String aF) {
+        initComponents();
+        if (null != aF)
+            setFile(aF);        
+        
+        lut = new VOITransform();
+        lc = LUTControl.create(this);
+    }    
+    
     void setFile(String aName) {  
         image = null;
         iso = null;
@@ -135,12 +153,7 @@ public class Isolevels extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Unable to open file" + ex.getLocalizedMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }  
     }
-    
-    public Isolevels(final String aF) {
-        initComponents();
-        if (null != aF)
-            setFile(aF);        
-    }    
+  
     
    
     /** This method is called from within the constructor to
@@ -333,6 +346,61 @@ public class Isolevels extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    @Override
+    public double getMin() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public double getMax() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setWindow(Window window) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Window getWindow() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setInverted(boolean bln) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isInverted() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setLinear(boolean bln) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isLinear() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setLUT(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public BufferedImage transform(BufferedImage bi, BufferedImage bi1) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Curve getWindowCurve() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     enum OP{
         NONE,
         LOG,
@@ -352,9 +420,19 @@ public class Isolevels extends javax.swing.JFrame {
                 BufferedImage out = new ConvolveOp(LOG55).filter(image, null);
                 image = out;
                 } break; 
-            case OTSU: 
-                JOptionPane.showMessageDialog(this, "Not implemented yet", "ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
+            case OTSU: { 
+                OtsuThresholder ot = new OtsuThresholder();
+                int thresh = ot.compute(image.getRaster().getPixels(0, 0, image.getWidth(), image.getHeight(), (int[])null));
+                final int[] ZEROS = {0,0,0};
+                final int[] ONES = {255,255,255};
+                
+                for (int i = 0; i<image.getWidth(); ++i)
+                    for (int j = 0; j < image.getHeight(); ++j) {
+                        int[] pix = image.getRaster().getPixel(i, j, (int[])null);                         
+                        image.getRaster().setPixel(i, j, pix[0] < thresh ? ZEROS : ONES);           
+                    }
+               // JOptionPane.showMessageDialog(this, "Not implemented yet", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         }
           
         cross = new Moments(image, null).getCoG();
