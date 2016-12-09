@@ -7,7 +7,7 @@ public class OtsuThresholder {
     private int histData[];
     private int maxLevelValue;
     private int threshold;
-    private final static int HISTOGRAM_SIZE = 65535;
+    private final static int HISTOGRAM_SIZE = 0xFFFF;//Short.MAX_VALUE;
     private final static int DATA_MASK = 0xFFFF;
 
     public OtsuThresholder() {
