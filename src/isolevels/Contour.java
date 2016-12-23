@@ -41,7 +41,8 @@ public class Contour {
        
         int dir = W;
         //2. go west to find the starting point where we have to return sometime                  
-        while (0 != d[j*width + i]) --i;                 
+        while (0 != d[j*width + i] && i >=0) --i;  
+                           
                               
         int x = i, y = j;       
         int x1 = x, y1 = y;
@@ -67,7 +68,7 @@ public class Contour {
                 }                
             }
 
-            render.addSegment(x1, y1, x, y, 0);
+            render.addSegment(x1, y1, x, y);
             x1 = x; y1 = y;
             
         } while (!(x == i && y == j));

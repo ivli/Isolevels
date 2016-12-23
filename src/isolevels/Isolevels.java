@@ -30,7 +30,7 @@ import com.ivli.roim.view.WindowTarget;
 import com.ivli.roim.controls.LUTControl;
 import com.ivli.roim.core.Curve;
 import com.ivli.roim.core.Window;
-import static isolevels.Kernels.LOG55;
+import java.awt.image.Kernel;
 
 public class Isolevels extends javax.swing.JFrame implements WindowTarget {
     String srcName;    
@@ -88,22 +88,21 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                         Rectangle r2 = new Rectangle();
                         r2.setFrameFromDiagonal(at.transform(p1, null), at.transform(p2, null));
                       
-                        iso = Isolevel.create(jRadioButton1.isSelected(), image, r2);                       
+                        iso = Isolevel.create(image, r2);                       
                                                     
                         Moments mom = new Moments(image, r2);
                         
-                        cross.setLocation(mom.getCoG());//.setLocation(mom.XM, mom.YM);                        
-                        
-                        jLevel.addChangeListener((ChangeEvent evt) -> {
-                            JSlider source = (JSlider)evt.getSource();
-                           // if (!source. getValueIsAdjusting()) {
-                                iso.update(source.getValue());
-                                shape = AffineTransform.getTranslateInstance(rect.getX(), rect.getY())
-                                                       .createTransformedShape(scale.createTransformedShape(iso));                                       
-                                repaint();                                                    
-                           // }                                                                            
-                        });
-                                                
+                        cross.setLocation(mom.getCoG());//.setLocation(mom.XM, mom.YM);                                                
+                        jLevel.addChangeListener((ChangeEvent evt) -> {                           
+                                shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected()));                                                                                               
+                                repaint();
+                            });
+                              
+                        jRadioButton1.addChangeListener((ChangeEvent evt) -> {                                                       
+                                shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected()));                                                                                                       
+                                repaint();
+                            });
+                                
                         jLevel.setMinimum((int)mom.getMin());
                         jLevel.setMaximum((int)mom.getMax());
                         jLevel.setValue((int)mom.getMed());                       
@@ -417,7 +416,7 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                     return;
                 } break;           
             case LOG: {                     
-                BufferedImage out = new ConvolveOp(LOG55).filter(image, null);
+                BufferedImage out = new ConvolveOp(new Kernel(5,5,Kernels.LOG_5x5)).filter(image, null);
                 image = out;
                 } break; 
             case OTSU: { 

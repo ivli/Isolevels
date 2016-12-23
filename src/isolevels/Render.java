@@ -7,6 +7,6 @@ package isolevels;
 
 @FunctionalInterface
 public interface Render { 
-    public void addSegment(double startX, double startY, double endX, double endY, double contourLevel); 
+    public void addSegment(double startX, double startY, double endX, double endY); 
 }
 

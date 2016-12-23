@@ -67,5 +67,5 @@ public class Kernels {
                                     -1f, -1f, -1f, -1f, -1f, 
                                     -1f, -1f, -1f, -1f, -1f};
     
-    final static Kernel LOG55 = new Kernel(5,5, LOG_5x5);
+   /// final static Kernel LOG55 = new Kernel(5,5, LOG_5x5);
 }

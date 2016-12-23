@@ -254,7 +254,7 @@ public class Conrec {
                                     }
                                     // Put your processing code here and comment out the printf
                                     //printf("%f %f %f %f %f\n",x1,y1,x2,y2,z[k]);
-                                    render.addSegment(x1,y1,x2,y2,z[k]);
+                                    render.addSegment(x1,y1,x2,y2);
                                 }
                             }
                         }
