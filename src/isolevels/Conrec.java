@@ -70,42 +70,35 @@ public class Conrec {
         }
         this.render = render;
     }
-    
-
+  
     /**
-     *     contour is a contouring subroutine for rectangularily spaced data 
+     *     contour is a contouring subroutine for rectangularly spaced data 
      *
      *     It emits calls to a line drawing subroutine supplied by the user
-     *     which draws a contour map corresponding to real*4data on a randomly
-     *     spaced rectangular grid. The coordinates emitted are in the same
-     *     units given in the x() and y() arrays.
-     *
-     *     Any number of contour levels may be specified but they must be
-     *     in order of increasing value.
-     *
+     *     which draws a contour map corresponding to real*4data on a evenly
+     *     spaced rectangular grid.     
      *
      * @param d  - matrix of data to contour
-     * @param ilb,iub,jlb,jub - index bounds of data matrix
+     * @param ilb,iub,jlb,jub - initial indexes and dimensions of bounds of data matrix 
      *
      *             The following two, one dimensional arrays (x and y) contain the horizontal and
-     *             vertical coordinates of each sample points.
-     * @param x  - data matrix column coordinates
-     * @param y  - data matrix row coordinates    
+     *             vertical coordinates of each sample points.    
      * @param z  - contour level 
      * 
      */
-    public void contour(int []d, int ilb, int iub, int jlb, int jub, int [] x, int [] y, int z) {
+    public void contour(int []d, int ilb, int width, int jlb, int height, int z) {
         int m1;
         int m2;
         int m3;
-        int case_value;      
+        //int case_value;      
         double x1 = 0.0;
         double x2 = 0.0;
         double y1 = 0.0;
         double y2 = 0.0;
         int i, j, m;
-        final int width = iub - ilb + 1;
-               
+        final int iub = width - 1;
+        final int jub = height - 1;
+                      
         // The indexing of im and jm should be noted as it has to start from zero
         // unlike the fortran counter part
         final int []im = {0,1,1,0};
@@ -143,12 +136,12 @@ public class Conrec {
                             // The indexing of im and jm should be noted as it has to
                             // start from zero
                             h[m]  = d[(i+im[m-1])+width*(j+jm[m-1])] - z;
-                            xh[m] = x[i+im[m-1]];
-                            yh[m] = y[j+jm[m-1]];
+                            xh[m] = i+im[m-1];
+                            yh[m] = j+jm[m-1];
                         } else {
                             h[0]  = 0.25*(h[1]+h[2]+h[3]+h[4]);
-                            xh[0] = 0.5*(x[i]+x[i+1]);
-                            yh[0] = 0.5*(y[j]+y[j+1]);
+                            xh[0] = 0.5*(i + i + 1);
+                            yh[0] = 0.5*(j + j + 1);
                         }
                         if (h[m]>0.0) {
                             sh[m] = 1;
@@ -187,7 +180,7 @@ public class Conrec {
                     //
                     //               Scan each triangle in the box
                     //
-                    for (m=1;m<=4;m++) {
+                    for (m=1; m<=4; m++) {
                         m1 = m;
                         m2 = 0;
                         if (m!=4) {
@@ -195,70 +188,68 @@ public class Conrec {
                         } else {
                             m3 = 1;
                         }
-                        case_value = castab[sh[m1]+1][sh[m2]+1][sh[m3]+1];
-                        if (case_value!=0) {
-                            switch (case_value) {
-                                case 1: // Line between vertices 1 and 2
-                                    x1=xh[m1];
-                                    y1=yh[m1];
-                                    x2=xh[m2];
-                                    y2=yh[m2];
-                                    break;
-                                case 2: // Line between vertices 2 and 3
-                                    x1=xh[m2];
-                                    y1=yh[m2];
-                                    x2=xh[m3];
-                                    y2=yh[m3];
-                                    break;
-                                case 3: // Line between vertices 3 and 1
-                                    x1=xh[m3];
-                                    y1=yh[m3];
-                                    x2=xh[m1];
-                                    y2=yh[m1];
-                                    break;
-                                case 4: // Line between vertex 1 and side 2-3
-                                    x1=xh[m1];
-                                    y1=yh[m1];
-                                    x2=xsect(m2,m3);
-                                    y2=ysect(m2,m3);
-                                    break;
-                                case 5: // Line between vertex 2 and side 3-1
-                                    x1=xh[m2];
-                                    y1=yh[m2];
-                                    x2=xsect(m3,m1);
-                                    y2=ysect(m3,m1);
-                                    break;
-                                case 6: //  Line between vertex 3 and side 1-2
-                                    x1=xh[m3];
-                                    y1=yh[m3];
-                                    x2=xsect(m1,m2);
-                                    y2=ysect(m1,m2);
-                                    break;
-                                case 7: // Line between sides 1-2 and 2-3
-                                    x1=xsect(m1,m2);
-                                    y1=ysect(m1,m2);
-                                    x2=xsect(m2,m3);
-                                    y2=ysect(m2,m3);
-                                    break;
-                                case 8: // Line between sides 2-3 and 3-1
-                                    x1=xsect(m2,m3);
-                                    y1=ysect(m2,m3);
-                                    x2=xsect(m3,m1);
-                                    y2=ysect(m3,m1);
-                                    break;
-                                case 9: // Line between sides 3-1 and 1-2
-                                    x1=xsect(m3,m1);
-                                    y1=ysect(m3,m1);
-                                    x2=xsect(m1,m2);
-                                    y2=ysect(m1,m2);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            // Put your processing code here and comment out the printf
-                            //printf("%f %f %f %f %f\n",x1,y1,x2,y2,z[k]);
-                            render.addSegment(x1,y1,x2,y2);
+
+                        switch (castab[sh[m1]+1][sh[m2]+1][sh[m3]+1]) {
+                            case 1: // Line between vertices 1 and 2
+                                x1=xh[m1];
+                                y1=yh[m1];
+                                x2=xh[m2];
+                                y2=yh[m2];
+                                break;
+                            case 2: // Line between vertices 2 and 3
+                                x1=xh[m2];
+                                y1=yh[m2];
+                                x2=xh[m3];
+                                y2=yh[m3];
+                                break;
+                            case 3: // Line between vertices 3 and 1
+                                x1=xh[m3];
+                                y1=yh[m3];
+                                x2=xh[m1];
+                                y2=yh[m1];
+                                break;
+                            case 4: // Line between vertex 1 and side 2-3
+                                x1=xh[m1];
+                                y1=yh[m1];
+                                x2=xsect(m2,m3);
+                                y2=ysect(m2,m3);
+                                break;
+                            case 5: // Line between vertex 2 and side 3-1
+                                x1=xh[m2];
+                                y1=yh[m2];
+                                x2=xsect(m3,m1);
+                                y2=ysect(m3,m1);
+                                break;
+                            case 6: //  Line between vertex 3 and side 1-2
+                                x1=xh[m3];
+                                y1=yh[m3];
+                                x2=xsect(m1,m2);
+                                y2=ysect(m1,m2);
+                                break;
+                            case 7: // Line between sides 1-2 and 2-3
+                                x1=xsect(m1,m2);
+                                y1=ysect(m1,m2);
+                                x2=xsect(m2,m3);
+                                y2=ysect(m2,m3);
+                                break;
+                            case 8: // Line between sides 2-3 and 3-1
+                                x1=xsect(m2,m3);
+                                y1=ysect(m2,m3);
+                                x2=xsect(m3,m1);
+                                y2=ysect(m3,m1);
+                                break;
+                            case 9: // Line between sides 3-1 and 1-2
+                                x1=xsect(m3,m1);
+                                y1=ysect(m3,m1);
+                                x2=xsect(m1,m2);
+                                y2=ysect(m1,m2);
+                                break;
+                            default: continue;
+
                         }
+                        // Put your processing code here and comment out the printf
+                        //printf("%f %f %f %f %f\n",x1,y1,x2,y2,z[k]);
+                        render.addSegment(x1, y1, x2, y2);
                     }
                 }
             }

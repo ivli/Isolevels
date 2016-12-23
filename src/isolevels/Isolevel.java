@@ -64,21 +64,12 @@ public class Isolevel {
         int   []y = new int[bounds.height];
         Path2D path = new Path2D.Double();
         int [] temp = iSrc.getRaster().getPixels(bounds.x, bounds.y, bounds.width, bounds.height, (int[]) null);
-
-        for (int j = 0; j < bounds.height; ++j) {                           
-            y[j] = j;
-            for (int i = 0; i < bounds.width; ++i) {                                
-                da[i][j] = temp[j*bounds.width + i];
-
-                x[i] = i; // Hahaha                                       
-            }
-        }  
         
         new Conrec((double sX, double sY, double eX, double eY) -> {               
                                                                     path.moveTo(sX, sY); 
                                                                     path.lineTo(eX, eY);
                                                                    })
-                .contour(temp, da, 0, bounds.width-1, 0, bounds.height-1, x, y, (int)aLevel);
+                .contour(temp, 0, bounds.width, 0, bounds.height, (int)aLevel);
 
         Point2D cog = new Moments(iSrc, bounds).getCoG(); 
         return path;
