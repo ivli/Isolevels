@@ -33,8 +33,7 @@ public class Isolevel {
                 AffineTransform.getTranslateInstance(iShape.getBounds().getX(), iShape.getBounds().getY())
                 );                                                       
     }
-    
-         
+             
     protected Isolevel(BufferedImage aSrc, Shape aROI) {
         iSrc = aSrc;
         iShape = null != aROI ? aROI : new Rectangle(0, 0, aSrc.getWidth(), aSrc.getHeight());          
@@ -58,16 +57,12 @@ public class Isolevel {
     }  
     ///
     protected Path2D isolevels(double aLevel) {   
-        Path2D path = new Path2D.Double();
-        double da[][];
-        double x[];
-        double y[];
-
+        
         final Rectangle bounds = iShape.getBounds();
-        da = new double[bounds.width][bounds.height];
-        x = new double[bounds.width];
-        y = new double[bounds.height];
-
+        int [][]da = new int[bounds.width][bounds.height];
+        int   []x = new int[bounds.width];
+        int   []y = new int[bounds.height];
+        Path2D path = new Path2D.Double();
         int [] temp = iSrc.getRaster().getPixels(bounds.x, bounds.y, bounds.width, bounds.height, (int[]) null);
 
         for (int j = 0; j < bounds.height; ++j) {                           
@@ -78,7 +73,7 @@ public class Isolevel {
                 x[i] = i; // Hahaha                                       
             }
         }  
-
+        
         new Conrec((double sX, double sY, double eX, double eY) -> {               
                                                                     path.moveTo(sX, sY); 
                                                                     path.lineTo(eX, eY);

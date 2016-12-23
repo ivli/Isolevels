@@ -5,7 +5,7 @@
  */
 package isolevels;
 
-import java.awt.geom.Point2D;
+//import java.awt.geom.Point2D;
 
 /**
  *
@@ -33,7 +33,7 @@ public class Contour {
             }; 
     
     public void contour(int []d, int width, int height) {
-        Point2D M = new Moments(width, height, d).getCoG();
+        java.awt.geom.Point2D M = new Moments(width, height, d).getCoG();
         
         //1. let's start from the center of gravity 
         int i = (int)Math.floor(M.getX());

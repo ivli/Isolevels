@@ -14,7 +14,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
@@ -23,7 +22,6 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import com.ivli.roim.view.VOITransform;
 import com.ivli.roim.view.WindowTarget;
@@ -32,17 +30,16 @@ import com.ivli.roim.core.Curve;
 import com.ivli.roim.core.Window;
 import java.awt.image.Kernel;
 
+
 public class Isolevels extends javax.swing.JFrame implements WindowTarget {
-    String srcName;    
+    String        srcName;    
     BufferedImage image = null;
-    Isolevel iso = null;
-    Contour zc = null;
-    Shape shape = null;
-    Rectangle2D rect = null;    
-    Point2D cross;
+    Isolevel    iso = null;    
+    Shape       shape = null;
+    Rectangle   rect = null;  //ROI in screen coordinates  
+    Point2D     cross;
     VOITransform lut;
-    LUTControl lc;
-    
+    LUTControl lc;   
       
     public Isolevels(final String aF) {
         initComponents();
@@ -55,10 +52,9 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
     
     void setFile(String aName) {  
         image = null;
-        iso = null;
-        zc = null;
+        iso   = null;       
         shape = null;
-        rect = null;     
+        rect  = null;     
         
         try {            
             image = ImageIO.read(new File(srcName=aName));                                               
@@ -74,15 +70,20 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                     public void mousePressed(MouseEvent e) {
                         p1 = e.getPoint();
                     }
-
+                    
+                    void update() {                     
+                        shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected()));                                                                                                       
+                        repaint();
+                    }
+                    
                     @Override
                     public void mouseReleased(MouseEvent e) {
                         Point p2 = e.getPoint();             
                         if (p1.equals(p2))
                             return;
-                        
-                        rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));
                        
+                        rect = new Rectangle(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
+                        ///                       
                         AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth()/(double)getWidth(), (double)image.getHeight()/(double)getHeight()); 
                                                                             
                         Rectangle r2 = new Rectangle();
@@ -92,17 +93,12 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                                                     
                         Moments mom = new Moments(image, r2);
                         
-                        cross.setLocation(mom.getCoG());//.setLocation(mom.XM, mom.YM);                                                
-                        jLevel.addChangeListener((ChangeEvent evt) -> {                           
-                                shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected()));                                                                                               
-                                repaint();
-                            });
+                        cross.setLocation(mom.getCoG());     
+                        
+                        jLevel.addChangeListener((ChangeEvent evt) -> {update();}); 
                               
-                        jRadioButton1.addChangeListener((ChangeEvent evt) -> {                                                       
-                                shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected()));                                                                                                       
-                                repaint();
-                            });
-                                
+                        jRadioButton1.addChangeListener((ChangeEvent evt) -> {update();});                                                     
+                          
                         jLevel.setMinimum((int)mom.getMin());
                         jLevel.setMaximum((int)mom.getMax());
                         jLevel.setValue((int)mom.getMed());                       
@@ -111,7 +107,7 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                 addMouseMotionListener(new MouseAdapter() {
                     public void mouseDragged(MouseEvent e) {                                             
                         Point p2 = e.getPoint();
-                        rect = new Rectangle2D.Double(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs((double)p1.x - (double)p2.x), Math.abs((double)p1.y - (double)p2.y));                 
+                        rect = new Rectangle(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));                 
                         repaint();
                     }                   
                 });
@@ -432,10 +428,7 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                     }
                // JOptionPane.showMessageDialog(this, "Not implemented yet", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
-        }
-          
-        cross = new Moments(image, null).getCoG();
-        
+        }   
     }
     
     private void jMenuItemOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemOpenFileActionPerformed
