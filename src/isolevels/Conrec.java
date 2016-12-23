@@ -48,7 +48,7 @@ package isolevels;
  */
 
 /**
- *  modified to make binary separation and work with integers  
+ *  modified for binary separation and work with integers  
  * 
  * @author  Igor Likhachev
  * @version  
@@ -94,24 +94,22 @@ public class Conrec {
      * @param z  - contour level 
      * 
      */
-    public void contour(int [][] d, int ilb, int iub, int jlb, int jub, int [] x, int [] y, int z) {
+    public void contour(int []d, int ilb, int iub, int jlb, int jub, int [] x, int [] y, int z) {
         int m1;
         int m2;
         int m3;
-        int case_value;
-       // int dmin;
-      //  int dmax;
+        int case_value;      
         double x1 = 0.0;
         double x2 = 0.0;
         double y1 = 0.0;
         double y2 = 0.0;
         int i, j, m;
-        final int width = iub - ilb;
-        final int height = jub - jlb;        
+        final int width = iub - ilb + 1;
+               
         // The indexing of im and jm should be noted as it has to start from zero
         // unlike the fortran counter part
-        final int [] im   = {0,1,1,0};
-        final int [] jm   = {0,0,1,1};
+        final int []im = {0,1,1,0};
+        final int []jm = {0,0,1,1};
         
         // Note that castab is arranged differently from the FORTRAN code because
         // Fortran and C/C++ arrays are transposed of each other, in this case
@@ -130,11 +128,11 @@ public class Conrec {
         };
         
         for (j=(jub-1); j>=jlb; j--) {
-            for (i=ilb; i<=iub-1; i++) {                
-                int d11 = d[i][j];
-                int d12 = d[i][(j+1)];
-                int d21 = d[i+1][j];
-                int d22 = d[(i+1)][(j+1)];
+            for (i=ilb; i<=iub-1; i++) {                               
+                int d11 = d[i+width*j];                
+                int d12 = d[i+width*(j+1)];                
+                int d21 = d[(i+1)+width*j];                               
+                int d22 = d[(i+1)+width*(j+1)];
                
                 final int dmin = Math.min(Math.min(d11, d12), Math.min(d21, d22));               
                 final int dmax = Math.max(Math.max(d11, d12), Math.max(d21, d22));
@@ -144,7 +142,7 @@ public class Conrec {
                         if (m>0) {
                             // The indexing of im and jm should be noted as it has to
                             // start from zero
-                            h[m]  = d[(i+im[m-1])][(j+jm[m-1])]-z;
+                            h[m]  = d[(i+im[m-1])+width*(j+jm[m-1])] - z;
                             xh[m] = x[i+im[m-1]];
                             yh[m] = y[j+jm[m-1]];
                         } else {

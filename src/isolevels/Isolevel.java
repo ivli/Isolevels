@@ -78,7 +78,7 @@ public class Isolevel {
                                                                     path.moveTo(sX, sY); 
                                                                     path.lineTo(eX, eY);
                                                                    })
-                .contour(da, 0, bounds.width-1, 0, bounds.height-1, x, y, (int)aLevel);
+                .contour(temp, da, 0, bounds.width-1, 0, bounds.height-1, x, y, (int)aLevel);
 
         Point2D cog = new Moments(iSrc, bounds).getCoG(); 
         return path;
