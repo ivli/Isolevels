@@ -99,8 +99,8 @@ public class Conrec {
         int m2;
         int m3;
         int case_value;
-        int dmin;
-        int dmax;
+       // int dmin;
+      //  int dmax;
         double x1 = 0.0;
         double x2 = 0.0;
         double y1 = 0.0;
@@ -129,22 +129,22 @@ public class Conrec {
             }
         };
         
-        for (j=(jub-1);j>=jlb;j--) {
-            for (i=ilb;i<=iub-1;i++) {
-                int temp1, temp2;
-                temp1 = Math.min(d[i][j], d[i][(j+1)]);
-                temp2 = Math.min(d[i+1][j], d[(i+1)][(j+1)]);
-                dmin  = Math.min(temp1,temp2);
-                temp1 = Math.max(d[i][j], d[i][(j+1)]);
-                temp2 = Math.max(d[i+1][j], d[(i+1)][(j+1)]);
-                dmax  = Math.max(temp1,temp2);
+        for (j=(jub-1); j>=jlb; j--) {
+            for (i=ilb; i<=iub-1; i++) {                
+                int d11 = d[i][j];
+                int d12 = d[i][(j+1)];
+                int d21 = d[i+1][j];
+                int d22 = d[(i+1)][(j+1)];
+               
+                final int dmin = Math.min(Math.min(d11, d12), Math.min(d21, d22));               
+                final int dmax = Math.max(Math.max(d11, d12), Math.max(d21, d22));
               
                 if (z>=dmin && z<=dmax) {
                     for (m=4; m>=0; m--) {
                         if (m>0) {
                             // The indexing of im and jm should be noted as it has to
                             // start from zero
-                            h[m]  = d[i+im[m-1]][j+jm[m-1]]-z;
+                            h[m]  = d[(i+im[m-1])][(j+jm[m-1])]-z;
                             xh[m] = x[i+im[m-1]];
                             yh[m] = y[j+jm[m-1]];
                         } else {
