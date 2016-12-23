@@ -38,8 +38,7 @@ public class Isolevel {
         iSrc = aSrc;
         iShape = null != aROI ? aROI : new Rectangle(0, 0, aSrc.getWidth(), aSrc.getHeight());          
     }  
-    
-    ///Contour
+   
     protected Path2D contour(double aLevel) {      
         Path2D path = new Path2D.Double();
         final Rectangle bounds = iShape.getBounds();        
@@ -48,28 +47,19 @@ public class Isolevel {
 
         BufferedImage out = new ConvolveOp(new Kernel(5, 5, Kernels.LOG_5x5)).filter(in, null);   
 
-        new Contour((double sX, double sY, double eX, double eY) -> {
-                                                                     path.moveTo(sX, sY); 
-                                                                     path.lineTo(eX, eY);
-                                                                    })
-                .contour(out.getRaster().getPixels(0, 0, out.getWidth(), out.getHeight(), (int[]) null), out.getWidth(), out.getHeight());        
+        new Contour((double sX, double sY, double eX, double eY) -> {path.moveTo(sX, sY); path.lineTo(eX, eY);})                                               
+            .contour(out.getRaster().getPixels(0, 0, out.getWidth(), out.getHeight(), (int[]) null), out.getWidth(), out.getHeight());   
+        
         return path;
     }  
-    ///
-    protected Path2D isolevels(double aLevel) {   
-        
-        final Rectangle bounds = iShape.getBounds();
-        int [][]da = new int[bounds.width][bounds.height];
-        int   []x = new int[bounds.width];
-        int   []y = new int[bounds.height];
+   
+    protected Path2D isolevels(double aLevel) {     
         Path2D path = new Path2D.Double();
-        int [] temp = iSrc.getRaster().getPixels(bounds.x, bounds.y, bounds.width, bounds.height, (int[]) null);
+        final Rectangle bounds = iShape.getBounds();               
+        final int [] temp = iSrc.getRaster().getPixels(bounds.x, bounds.y, bounds.width, bounds.height, (int[]) null);
         
-        new Conrec((double sX, double sY, double eX, double eY) -> {               
-                                                                    path.moveTo(sX, sY); 
-                                                                    path.lineTo(eX, eY);
-                                                                   })
-                .contour(temp, 0, bounds.width, 0, bounds.height, (int)aLevel);
+        new Conrec((double sX, double sY, double eX, double eY) -> {path.moveTo(sX, sY); path.lineTo(eX, eY);})                                                       
+            .contour(temp, 0, bounds.width, 0, bounds.height, (int)aLevel);
 
         Point2D cog = new Moments(iSrc, bounds).getCoG(); 
         return path;
