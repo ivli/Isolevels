@@ -5,12 +5,6 @@
  */
 package isolevels;
 
-
-import java.awt.Rectangle;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.awt.image.PixelGrabber;
-
 /**
  *
  * @author likhachev
@@ -24,44 +18,31 @@ public class Moments {
     double min;
     double max;
     
-    private int width;
-    private int height;
-    private int pixels[];
-       
-    public Moments(BufferedImage aI, Rectangle aR) {        
-        width = aI.getWidth();
-        height = aI.getHeight();
-        pixels = aI.getRaster().getPixels(0, 0, width, height, (int[])null);      
-        calculate(aR);
-    }
-    
-    public Moments(int aWidth, int aHeight, int[] aPixels) {
+    private final int width;
+    private final int height;
+    private final int pixels[];
+   
+    private Moments(int aWidth, int aHeight, int[] aPixels) {
         width = aWidth;
         height = aHeight;
-        pixels = aPixels;
-        calculateMoments(0, 0, width, height);
+        pixels = aPixels;  
     }
     
-    public Point2D getCoG() {        
-        return new Point2D.Double(XM, YM);
+    public static Moments create(int aWidth, int aHeight, final int[] aPixels) {
+        if (null == aPixels) 
+            throw new IllegalArgumentException("pixels cannot be null");
+        if (aPixels.length != aHeight*aWidth) 
+            throw new IllegalArgumentException("Sanity check failed");
+        
+        return new Moments(aWidth, aHeight, aPixels);
     }
     
+    public double [] getCoG() {return new double[]{XM, YM};}    
     public double getMin() {return min;}
     public double getMax() {return max;}
-    public double getMed() {return (max - min) / 2.;}
-    
-    void calculate(Rectangle aR) {
-        if (null == aR)
-            calculateMoments(0, 0, width, height);
-        else {
-            if (aR.x < 0 || aR.y < 0 || (aR.x + aR.width) > width || (aR.y + aR.height) > height)
-                throw new IllegalArgumentException("Wrong ROI");
-
-            calculateMoments(aR.x, aR.y, aR.width, aR.height);
-        }
-    }
-       
-    private void calculateMoments(int rx, int ry, int rw, int rh) {                          
+    public double getMed() {return (max - min) / 2.;}    
+   
+    public Moments calculate(int rx, int ry, int rw, int rh) {                          
         double v, v2, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
         min = Double.MAX_VALUE;
         max = Double.MIN_VALUE;
@@ -91,7 +72,7 @@ public class Moments {
         kurtosis = (((sum4 - 4.0*M*sum3 + 6.0*mean2*sum2)/pixelCount - 3.0*mean2*mean2)/(variance*variance)-3.0);
 
         XM = xsum/sum1+0.5;
-        YM = ysum/sum1+0.5;	
-        System.out.printf("--> (%d,%d,%d,%d) = %f, %f", rx, ry, rw, rh, XM, YM);
+        YM = ysum/sum1+0.5;	 
+        return this;
     }
 }

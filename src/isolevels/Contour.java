@@ -33,11 +33,11 @@ public class Contour {
             }; 
     
     public void contour(int []d, int width, int height) {
-        java.awt.geom.Point2D M = new Moments(width, height, d).getCoG();
+        double[] M = Moments.create(width, height, d).calculate(0, 0, width, height).getCoG();
         
         //1. let's start from the center of gravity 
-        int i = (int)Math.floor(M.getX());
-        int j = (int)Math.floor(M.getY());
+        int i = (int)Math.floor(M[0]);
+        int j = (int)Math.floor(M[1]);
        
         int dir = W;
         //2. go west to find the starting point where we have to return sometime                  

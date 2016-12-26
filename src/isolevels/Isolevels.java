@@ -40,7 +40,8 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
     Point2D     cross;
     VOITransform lut;
     LUTControl lc;   
-      
+    Moments mom;
+    
     public Isolevels(final String aF) {
         initComponents();
         if (null != aF)
@@ -55,10 +56,12 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
         iso   = null;       
         shape = null;
         rect  = null;     
-        
+       
         try {            
             image = ImageIO.read(new File(srcName=aName));                                               
-            cross = new Moments(image, null).getCoG();
+            mom = Moments.create(image.getWidth(), image.getHeight(), image.getRaster().getPixels(0, 0, image.getWidth(), image.getHeight(), (int[])null));
+            double []d = mom.calculate(0, 0, image.getWidth(), image.getHeight()).getCoG();
+            cross = new Point2D.Double(d[0], d[1]);
             jPanel.removeAll();
                 
             jPanel.add(new JComponent() {
@@ -91,9 +94,9 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                       
                         iso = Isolevel.create(image, r2);                       
                                                     
-                        Moments mom = new Moments(image, r2);
+                        double [] d = mom.calculate(r2.x, r2.y, r2.width, r2.height).getCoG();
                         
-                        cross.setLocation(mom.getCoG());     
+                        cross.setLocation(d[0], d[1]);     
                         
                         jLevel.addChangeListener((ChangeEvent evt) -> {update();}); 
                               
