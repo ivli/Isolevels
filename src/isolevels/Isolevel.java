@@ -28,8 +28,8 @@ public class Isolevel {
          return new Isolevel(aSrc, aRect);          
     }
     
-    public Shape update(double aLevel, boolean aMethod) {        
-        return (aMethod ? contour(aLevel) : isolevels(aLevel))
+    public Shape update(double aLevel, boolean aMethod, double [] aD) {        
+        return (aMethod ? contour(aLevel) : isolevels(aLevel, aD))
                .createTransformedShape(
                 AffineTransform.getTranslateInstance(iShape.getBounds().getX(), iShape.getBounds().getY())
                 );                                                       
@@ -54,42 +54,73 @@ public class Isolevel {
         return path;
     }  
    
-    protected Path2D isolevels(double aLevel) {     
+    protected Path2D isolevels(double aLevel, double[] aPoints) {     
         Path2D path = new Path2D.Double();
         final Rectangle bounds = iShape.getBounds();               
-        final int [] tmp = iSrc.getRaster().getPixels(bounds.x, bounds.y, bounds.width, bounds.height, (int[]) null);
+        final int []tmp = iSrc.getRaster().getPixels(bounds.x, bounds.y, bounds.width, bounds.height, (int[]) null);
         
         new Conrec((double sX, double sY, double eX, double eY) -> {path.moveTo(sX, sY); path.lineTo(eX, eY);})                                                       
             .contour(tmp, 0, bounds.width, 0, bounds.height, (int)aLevel);
 
         double[] cog = Moments.create(bounds.width, bounds.height, tmp).calculate(0, 0, bounds.width, bounds.height).getCoG(); 
-        
-        //while ()
-        
-        
+                        
         PathIterator it = path.getPathIterator(null);
         
-        double[] coords={.0,.0,.0,.0,.0,.0};
+        double min_dist = Math.sqrt(bounds.width * bounds.height);
+        double [] min_coords = {0., 0.};
         
-        while(!it.isDone()) {            
+        while(!it.isDone()) {   
+            double[] coords = {.0,.0,.0,.0,.0,.0};          
             switch(it.currentSegment(coords)) {
-                case PathIterator.SEG_MOVETO:{
-                    Point2D p1 = new Point2D.Double(coords[0], coords[1]);
-                    Point2D p2 = new Point2D.Double(coords[2], coords[3]);
-                            } break;
-                case PathIterator.SEG_LINETO:{
-                    Point2D p1 = new Point2D.Double(coords[0], coords[1]);
-                    Point2D p2 = new Point2D.Double(coords[2], coords[3]);
-                }; break;
-                case PathIterator.SEG_QUADTO:
-                case PathIterator.SEG_CUBICTO:
-                case PathIterator.SEG_CLOSE:   
+                case PathIterator.SEG_MOVETO:{                   
+                    double dist = Math.sqrt((cog[0] - coords[0])*(cog[0] - coords[0]) + (cog[1] - coords[1])*(cog[1] - coords[1])); //euclidian distance                  
+                    if (dist < min_dist) {
+                        min_dist = dist;
+                        min_coords[0] = coords[0]; 
+                        min_coords[1] = coords[1]; 
+                    }                
+                } break;                
+                default:
+                    break;
+            }            
+            it.next();
+            
+        }
+        
+        System.out.printf("CoG is: (%f:%f)\n", cog[0], cog[1]);
+        System.out.printf("closest point is: |%f:%f| =%f\n", min_coords[0], min_coords[1], min_dist);
+        
+        
+        it = path.getPathIterator(null);
+        int prevs = -1;
+        double[] prevp = {.0, .0};
+        
+        while(!it.isDone()) {   
+            double[] coords = {.0,.0,.0,.0,.0,.0};          
+            switch(it.currentSegment(coords)) {
+                case PathIterator.SEG_MOVETO: {                           
+                       prevs = PathIterator.SEG_MOVETO;
+                       prevp[0] = coords[0];
+                       prevp[1] = coords[1];
+                } break;       
+                case PathIterator.SEG_LINETO: {                      
+                    if (prevs == PathIterator.SEG_MOVETO) {
+                        System.out.printf("LINETO (%f, %f), (%f, %f)\n", prevp[0], prevp[1], coords[0], coords[1]);
+                    }                    
+                } break;                
                 default:
                     break;
             }            
             it.next();
         }
         
+        
+        
+        
+        if (null != aPoints) {
+            aPoints[0] = min_coords[0] + bounds.x;
+            aPoints[1] = min_coords[1] + bounds.y;                  
+        }
         
         return path;
     }    

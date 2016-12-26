@@ -38,9 +38,10 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
     Shape       shape = null;
     Rectangle   rect = null;  //ROI in screen coordinates  
     Point2D     cross;
+    Point2D     cross2;
     VOITransform lut;
     LUTControl lc;   
-    Moments mom;
+    Moments    mom;
     
     public Isolevels(final String aF) {
         initComponents();
@@ -74,8 +75,10 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                         p1 = e.getPoint();
                     }
                     
-                    void update() {                     
-                        shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected()));                                                                                                       
+                    void update() {       
+                        double []d = {.0,.0};
+                        shape = scale.createTransformedShape(iso.update(jLevel.getValue(), !jRadioButton1.isSelected(), d));     
+                        cross2 = new Point2D.Double(d[0] , d[1] );
                         repaint();
                     }
                     
@@ -86,7 +89,12 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                             return;
                        
                         rect = new Rectangle(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
-                        ///                       
+                       
+                        
+                        System.out.printf("---------------------------------------------------------------\n" +
+                                          "-> new ROI set (%d, %d):(%d, %d)\n",rect.x, rect.y, rect.width, rect.height
+                                         );
+                        
                         AffineTransform at = AffineTransform.getScaleInstance((double)image.getWidth()/(double)getWidth(), (double)image.getHeight()/(double)getHeight()); 
                                                                             
                         Rectangle r2 = new Rectangle();
@@ -101,10 +109,7 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                         jLevel.addChangeListener((ChangeEvent evt) -> {update();}); 
                               
                         jRadioButton1.addChangeListener((ChangeEvent evt) -> {update();});                                                     
-                          
-                        double M = mom.getExpectation();
-                        double m = mom.getMedian();
-                        System.out.printf("M = %f, m = %f \n", M, m);
+                                                                          
                         jLevel.setMinimum((int)mom.getMin());
                         jLevel.setMaximum((int)mom.getMax());
                         jLevel.setValue((int)mom.getExpectation());                       
@@ -145,6 +150,18 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                         p.moveTo(x, y - 5);
                         p.lineTo(x, y + 5);
                         g2d.setPaint(Color.BLUE);
+                        g2d.draw(p);   
+                    }     
+                    
+                    if (null != cross2) {
+                        Path2D p = new Path2D.Double();
+                        final double x = cross2.getX() * (double)getWidth()/(double)image.getWidth();
+                        final double y = cross2.getY() * (double)getHeight()/(double)image.getHeight();
+                        p.moveTo(x - 3, y - 3);
+                        p.lineTo(x + 3, y + 3);
+                        p.moveTo(x + 3, y - 3);
+                        p.lineTo(x - 3, y + 3);
+                        g2d.setPaint(Color.GREEN);
                         g2d.draw(p);   
                     }                    
                 }                  
