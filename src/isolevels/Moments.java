@@ -10,14 +10,15 @@ package isolevels;
  * @author likhachev
  */
 public class Moments {    
-    double M;    
-    double XM;
-    double YM;
+    double M;   //mean
+    double XM;  //Center of Gravity x
+    double YM;  //Center of Gravity x
     double skewness;
     double kurtosis;
     double min;
     double max;
-    
+    double iden; //integral density
+     
     private final int width;
     private final int height;
     private final int pixels[];
@@ -40,10 +41,12 @@ public class Moments {
     public double [] getCoG() {return new double[]{XM, YM};}    
     public double getMin() {return min;}
     public double getMax() {return max;}
-    public double getMed() {return (max - min) / 2.;}    
+    public double getMedian() {return (max - min)/2.0;}
+    public double getExpectation() {return M;}    
    
     public Moments calculate(int rx, int ry, int rw, int rh) {                          
-        double v, v2, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
+        double v, v2, sum2=0.0, sum3=0.0, sum4=0.0, xsum=0.0, ysum=0.0;
+        iden=0.0;
         min = Double.MAX_VALUE;
         max = Double.MIN_VALUE;
         for (int y=ry; y<(ry+rh); y++) {
@@ -51,7 +54,7 @@ public class Moments {
                 for (int x=rx; x<(rx+rw); x++) {				
                     v = pixels[i] & 0xffff;                    
                     v2 = v*v;
-                    sum1 += v;
+                    iden += v;
                     sum2 += v2;
                     sum3 += v*v2;
                     sum4 += v2*v2;
@@ -64,15 +67,15 @@ public class Moments {
         }
         
         double pixelCount = rw*rh;
-        M = sum1/pixelCount;
+        M = iden/pixelCount;
         double mean2 = M*M;
         double variance = sum2/pixelCount - mean2;
         double sDeviation = Math.sqrt(variance);
         skewness = ((sum3 - 3.0*M*sum2)/pixelCount + 2.0*M*mean2)/(variance*sDeviation);
         kurtosis = (((sum4 - 4.0*M*sum3 + 6.0*mean2*sum2)/pixelCount - 3.0*mean2*mean2)/(variance*variance)-3.0);
 
-        XM = xsum/sum1+0.5;
-        YM = ysum/sum1+0.5;	 
+        XM = xsum/iden+0.5;
+        YM = ysum/iden+0.5;	 
         return this;
     }
 }

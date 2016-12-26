@@ -102,9 +102,12 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                               
                         jRadioButton1.addChangeListener((ChangeEvent evt) -> {update();});                                                     
                           
+                        double M = mom.getExpectation();
+                        double m = mom.getMedian();
+                        System.out.printf("M = %f, m = %f \n", M, m);
                         jLevel.setMinimum((int)mom.getMin());
                         jLevel.setMaximum((int)mom.getMax());
-                        jLevel.setValue((int)mom.getMed());                       
+                        jLevel.setValue((int)mom.getExpectation());                       
                     }});
 
                 addMouseMotionListener(new MouseAdapter() {
