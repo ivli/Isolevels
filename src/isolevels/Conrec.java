@@ -55,6 +55,11 @@ package isolevels;
  */
 public class Conrec {
 
+    @FunctionalInterface
+    public interface Render { 
+        public void addSegment(double startX, double startY, double endX, double endY); 
+    }
+
     private double  []  h   =  new double [5];
     private int     []  sh  =  new int    [5];
     private double  []  xh  =  new double [5];
@@ -159,7 +164,7 @@ public class Conrec {
                     // vertices of each triangle are indexed by parameters m1,m2,and
                     // m3.
                     // It is assumed that the centre of the box is always vertex 2
-                    // though this isimportant only when all 3 vertices lie exactly on
+                    // though this is important only when all 3 vertices lie exactly on
                     // the same contour level, in which case only the side of the box
                     // is drawn.
                     //

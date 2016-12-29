@@ -53,10 +53,10 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
     }    
     
     void setFile(String aName) {  
-        image = null;
-        iso   = null;       
-        shape = null;
-        rect  = null;     
+        //image = null;
+        //iso   = null;       
+        //shape = null;
+        //rect  = null;     
        
         try {            
             image = ImageIO.read(new File(srcName=aName));                                               
@@ -127,6 +127,7 @@ public class Isolevels extends javax.swing.JFrame implements WindowTarget {
                 @Override
                 public void paintComponent(Graphics g) {   
                     scale = AffineTransform.getScaleInstance((double)getWidth()/(double)image.getWidth(), (double)getHeight()/(double)image.getHeight());                   
+                    System.out.printf("now scale is %f, %f", scale.getScaleX(), scale.getScaleY());
                     BufferedImage buf = new AffineTransformOp(scale, AffineTransformOp.TYPE_NEAREST_NEIGHBOR).filter(image, null);
                     g.drawImage(buf, 0, 0, buf.getWidth(), buf.getHeight(), null);
                     
