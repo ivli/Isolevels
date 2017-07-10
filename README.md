@@ -1,5 +1,5 @@
 
-Simple image segmentation toy, tailored to biomedical, mostly nuclear medicine, images
+Image segmentation example, meant for biomedical images such as nuclear medicine, CT etc.
 
 The main purpose is to automate ROI creation over solid organs and pars such as liver or heard's ventricles.    
 Isolevel creation is based on works of http://paulbourke.net/papers/conrec et al
