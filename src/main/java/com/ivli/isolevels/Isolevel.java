@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package isolevels;
+package com.ivli.isolevels;
 
 
 import java.awt.Rectangle;

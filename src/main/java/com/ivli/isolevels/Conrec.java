@@ -1,5 +1,5 @@
 
-package isolevels;
+package com.ivli.isolevels;
 
 /*
  * Conrec.java
