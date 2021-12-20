@@ -53,33 +53,30 @@ import com.ivli.roim.*;
 import java.awt.image.Kernel;
 
 
-public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeListener, WindowChangeListener {//}, ZoomChangeListener, ProgressListener{ ///implements WindowTarget 
+public class ISOLEVELS extends javax.swing.JFrame {//implements  FrameChangeListener, WindowChangeListener {//}, ZoomChangeListener, ProgressListener{ ///implements WindowTarget 
     String        srcName;    
     BufferedImage image = null;
-    Isolevel    iso = null;    
-    Shape       shape = null;
-    Rectangle   rect = null;  //ROI in screen coordinates  
-    Point2D     cross;
-    Point2D     cross2;
-    VOITransform lut;
-    LUTControl lc;   
-    Moments    mom;
+    Isolevel      iso = null;    
+    Shape         shape = null;
+    Rectangle     rect = null;  //ROI in screen coordinates  
+    Point2D       cross;
+    Point2D       cross2;
+    VOITransform   iVoi;
+   /// LUTControl     iLut;   
+    Moments        mom;
     
-    public Isolevels() {
+
+    public ISOLEVELS() {
         initComponents();
         //if (null != aF)
          //   setFile(aF);        
         
-        lut = new VOITransform();
-        //lc = LUTControl.create();
+       iVoi = new VOITransform();
+       ///iLut = LUTControl.create();
     }    
     
     void setFile(String aName) {  
-        //image = null;
-        //iso   = null;       
-        //shape = null;
-        //rect  = null;     
-       
+         
         try {            
             image = ImageIO.read(new File(srcName=aName));                                               
             mom = Moments.create(image.getWidth(), image.getHeight(), image.getRaster().getPixels(0, 0, image.getWidth(), image.getHeight(), (int[])null));
@@ -208,24 +205,32 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
         jPanel2 = new javax.swing.JPanel();
         jRadioButton2 = new javax.swing.JRadioButton();
         jRadioButton1 = new javax.swing.JRadioButton();
-        jLevel1 = new javax.swing.JSlider();
+        jWindowWidth = new javax.swing.JSlider();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItemOpenFile = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Antenna");
+        setTitle("Isolevels");
 
         jPanel.setMinimumSize(new java.awt.Dimension(200, 200));
         jPanel.setPreferredSize(new java.awt.Dimension(400, 400));
         jPanel.setLayout(new java.awt.BorderLayout());
 
         jLevel.setOrientation(javax.swing.JSlider.VERTICAL);
-        jLevel.setToolTipText("Adjust level");
+        jLevel.setToolTipText("window level");
         jLevel.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jLevelStateChanged(evt);
+            }
+        });
+
+        jWindowWidth.setOrientation(javax.swing.JSlider.VERTICAL);
+        jWindowWidth.setToolTipText("window width");
+        jWindowWidth.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jWindowStateChanged(evt);
             }
         });
 
@@ -320,7 +325,7 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
                 .addContainerGap())
         );
 
-        jLevel1.setOrientation(javax.swing.JSlider.VERTICAL);
+        
 
         jMenu1.setText("File");
 
@@ -350,7 +355,7 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLevel1, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jWindowWidth, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLevel, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -365,7 +370,7 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
                         .addGap(7, 7, 7)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLevel, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLevel1, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jWindowWidth, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(20, 20, 20)
@@ -440,7 +445,7 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
         OTSU
     };        
 
-    static Isolevels is;
+    static ISOLEVELS is;
     
     void preprocess(OP aOp) {        
         switch(aOp) {
@@ -519,10 +524,19 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
         jRadioButton1ActionPerformed(evt);
     }//GEN-LAST:event_jRadioButton2ActionPerformed
 
-    private void jLevelStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jLevelStateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jLevelStateChanged
-    
+    private void jLevelStateChanged(javax.swing.event.ChangeEvent evt) {
+       ///level up/down
+       int val = jLevel.getValue();
+       System.out.printf("jLevel.getValue() = %d", val);
+
+    }
+
+    private void jWindowStateChanged(javax.swing.event.ChangeEvent evt) {
+        int val = jWindowWidth.getValue();
+        System.out.printf("jWindowWidth.getValue() = %d", val);
+        int full = jWindowWidth.getMaximum() - jWindowWidth.getMinimum();
+
+     }
     ///static Isolevels is;
     
     /**
@@ -542,13 +556,13 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
                     break;
                 }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
@@ -557,7 +571,7 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {  
                 System.out.println("-->Starting up");                    
-                is = new Isolevels();
+                is = new ISOLEVELS();
                 is.setVisible(true);
             }
         });
@@ -567,7 +581,7 @@ public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeList
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JSlider jLevel;
-    private javax.swing.JSlider jLevel1;
+    private javax.swing.JSlider jWindowWidth;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
