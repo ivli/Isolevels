@@ -10,7 +10,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <exec.mainClass>com.ivli.isolevels.ISOLEVELS</exec.mainClass>
+        <exec.mainClass>com.ivli.isolevels.Isolevels</exec.mainClass>
 
     </properties>	
 
@@ -21,25 +21,20 @@
             <version>1.0.8-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>spi</artifactId>
-            <version>1.0.8-SNAPSHOT</version>
-	        <type>pom</type>
-            <!--scope>runtime</scope-->
+            <groupId>javax.media</groupId>
+            <artifactId>jai_core</artifactId>
+            <version>1.1.3</version>
+        </dependency>                
+        <dependency>
+            <groupId>org.dcm4che</groupId>
+            <artifactId>dcm4che-core</artifactId>
+            <version>5.10.5</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>bitmap</artifactId>
-            <version>1.0.8-SNAPSHOT</version>
-            <!--scope>runtime</scope-->
-        </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>dicom</artifactId>
-            <version>1.0.8-SNAPSHOT</version>
-            
-        </dependency>
+            <groupId>org.dcm4che</groupId>
+            <artifactId>dcm4che-imageio</artifactId>
+            <version>5.10.5</version>            
+        </dependency>         
     </dependencies>
     <build>
         <plugins>
@@ -56,7 +51,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.ivli.isolevels.ISOLEVELS</mainClass>
+                                    <mainClass>com.ivli.isolevels.Isolevels</mainClass>
                                     <manifestEntries>
                                         <Multi-Release>true</Multi-Release>
                                     </manifestEntries>
@@ -76,6 +71,18 @@
         </resources>
     </build>
 
+    <repositories>
+        <repository>
+            <id>geotoolkit</id>
+            <name>geotoolkit</name>
+            <url>https://maven.geotoolkit.org</url>
+        </repository>
+        <repository>
+            <id>dcm4che.org</id>
+            <name>dcm4che.org</name>
+            <url>http://maven.dcm4che.org</url>
+        </repository>
+    </repositories>
 
     <scm>
         <connection>scm:git:git@github.com:ivli/isolevels.git</connection>

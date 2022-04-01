@@ -53,7 +53,7 @@ import com.ivli.roim.*;
 import java.awt.image.Kernel;
 
 
-public class ISOLEVELS extends javax.swing.JFrame {//implements  FrameChangeListener, WindowChangeListener {//}, ZoomChangeListener, ProgressListener{ ///implements WindowTarget 
+public class Isolevels extends javax.swing.JFrame {//implements  FrameChangeListener, WindowChangeListener {//}, ZoomChangeListener, ProgressListener{ ///implements WindowTarget 
     String        srcName;    
     BufferedImage image = null;
     Isolevel      iso = null;    
@@ -66,7 +66,7 @@ public class ISOLEVELS extends javax.swing.JFrame {//implements  FrameChangeList
     Moments        mom;
     
 
-    public ISOLEVELS() {
+    public Isolevels() {
         initComponents();
         //if (null != aF)
          //   setFile(aF);        
@@ -445,7 +445,7 @@ public class ISOLEVELS extends javax.swing.JFrame {//implements  FrameChangeList
         OTSU
     };        
 
-    static ISOLEVELS is;
+    static Isolevels is;
     
     void preprocess(OP aOp) {        
         switch(aOp) {
@@ -556,13 +556,13 @@ public class ISOLEVELS extends javax.swing.JFrame {//implements  FrameChangeList
                     break;
                 }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ISOLEVELS.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Isolevels.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
@@ -571,7 +571,7 @@ public class ISOLEVELS extends javax.swing.JFrame {//implements  FrameChangeList
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {  
                 System.out.println("-->Starting up");                    
-                is = new ISOLEVELS();
+                is = new Isolevels();
                 is.setVisible(true);
             }
         });
